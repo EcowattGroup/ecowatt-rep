@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a246a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<title>إيكوواط — المندوب</title>
+<style>
+:root{--n:#0a246a;--o:#ff8c00;--bg:#f1f1ef;--c:#fff;--t:#1f2937;--m:#6b7280;--ok:#127a3c;--bad:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:15px Tahoma,Arial,sans-serif}
+header{background:var(--n);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--o);position:sticky;top:0;z-index:5}
+header b{font-size:16px}#net{font-size:12px;padding:2px 8px;border-radius:10px;background:#127a3c}#net.off{background:#b42318}
+nav{display:flex;gap:4px;padding:8px 12px;overflow-x:auto;background:#fff;border-bottom:1px solid #e8e6e0}nav button{flex:0 0 auto;border:1px solid #c9c5b9;background:#fff;color:var(--n);border-radius:16px;padding:6px 12px;font:700 13px Tahoma}nav button.on{background:var(--n);color:#fff;border-color:var(--n)}
+main{padding:12px 16px 90px}.card{background:var(--c);border-radius:10px;padding:12px;margin:8px 0;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+label{display:block;margin:8px 0 3px;font-size:13px;color:var(--m)}input,select,textarea{width:100%;border:1px solid #c9c5b9;border-radius:8px;padding:10px;font:15px Tahoma;background:#fff}
+.btn{display:block;width:100%;border:0;border-radius:10px;padding:13px;font:700 15px Tahoma;background:var(--o);color:#fff;margin-top:12px}.btn.s{background:#e8e6e0;color:var(--n)}
+.row{display:flex;justify-content:space-between;gap:8px;align-items:center}.num{direction:ltr;font-family:Consolas,monospace}.mut{color:var(--m);font-size:12px}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.ln{display:grid;grid-template-columns:1fr 70px 90px 34px;gap:6px;margin:6px 0}.ln input{padding:8px}.x{border:0;background:#fde8e8;color:var(--bad);border-radius:8px}
+#q{margin-bottom:6px}img.prev{max-width:100%;border-radius:8px;margin-top:6px}
+</style>
+</head>
+<body>
+<header><b>إيكوواط — المندوب</b><span id="net">متصل</span></header>
+<div id="app"></div>
+<script>
+/* ===== ECOwatt 20261287 — تطبيق المندوب (البند 13 — النسخة الأولى: المندوب فقط) =====
+   • الدخول بنفس اسم المستخدم والرقم السري • الصلاحيات من الخادم
+   • عملائي وأرصدتهم • طلب بيع • سند قبض (نقد أو شيك مع صورة) • عمولتي
+   • يعمل بدون إنترنت: البيانات من آخر تحميل، والطلبات تُحفظ في «صندوق الإرسال» وتُرسل تلقائياً عند رجوع الاتصال بنفس الرقم (لا تكرار)
+   • كل ما يُرسل يدخل كطلب على مسار الموافقات ولا يُرحَّل مباشرة */
+var URL_='https://script.google.com/macros/s/AKfycbwwgY1U4QpfAV489MkN7rPfemC0sSkN8QTgTh4D8PO5dBkIh6J8TOPBR0s-CswSpiNrPQ/exec';
+function _sha256(ascii){
+function rr(v,a){return (v>>>a)|(v<<(32-a));}
+var maxWord=Math.pow(2,32), result='', i, j, words=[], bitLen=ascii.length*8;
+var hash=[], k=[], pc=0, comp={};
+for(var c=2;pc<64;c++){
+if(!comp[c]){
+for(i=0;i<313;i+=c) comp[i]=c;
+hash[pc]=(Math.pow(c,.5)*maxWord)|0;
+k[pc++]=(Math.pow(c,1/3)*maxWord)|0;
+}
+}
+ascii+='\x80';
+while(ascii.length%64-56) ascii+='\x00';
+for(i=0;i<ascii.length;i++){ j=ascii.charCodeAt(i); words[i>>2]|=j<<((3-i)%4)*8; }
+words[words.length]=((bitLen/maxWord)|0);
+words[words.length]=bitLen;
+for(j=0;j<words.length;){
+var w=words.slice(j,j+=16), old=hash;
+hash=hash.slice(0,8);
+for(i=0;i<64;i++){
+var w15=w[i-15], w2=w[i-2], a=hash[0], e=hash[4];
+var t1=hash[7]+(rr(e,6)^rr(e,11)^rr(e,25))+((e&hash[5])^((~e)&hash[6]))+k[i]+
+(w[i]=(i<16)?w[i]:(w[i-16]+(rr(w15,7)^rr(w15,18)^(w15>>>3))+w[i-7]+(rr(w2,17)^rr(w2,19)^(w2>>>10)))|0);
+var t2=(rr(a,2)^rr(a,13)^rr(a,22))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+hash=[(t1+t2)|0].concat(hash);
+hash[4]=(hash[4]+t1)|0;
+}
+for(i=0;i<8;i++) hash[i]=(hash[i]+old[i])|0;
+}
+for(i=0;i<8;i++) for(j=3;j+1;j--){ var b=(hash[i]>>(j*8))&255; result+=((b<16)?0:'')+b.toString(16); }
+return result;
+}
+
+function credHash(u,p){u=String(u||'').trim().toLowerCase().replace(/[أإآ]/g,'ا');p=String(p||'').trim().replace(/[٠-٩]/g,function(d){return String(d.charCodeAt(0)-1632);});return _sha256(unescape(encodeURIComponent('ecowatt|'+u+'|'+p)));}
+function E(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function G(k,d){try{var v=localStorage.getItem('rep_'+k);return v==null?d:JSON.parse(v);}catch(e){return d;}}
+function P(k,v){try{localStorage.setItem('rep_'+k,JSON.stringify(v));}catch(e){alert('مساحة الجهاز ممتلئة');}}
+function fm(n){n=Number(n)||0;return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function api(o){var t=G('token','');if(t)o.token=t;return fetch(URL_,{method:'POST',body:JSON.stringify(o)}).then(function(r){return r.json();});}
+function uidReq(){var s='REQ-M';for(var i=0;i<10;i++)s+='0123456789ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.random()*34|0];return s;}
+var S={tab:'cust',boot:G('boot',null)};
+var A=document.getElementById('app');
+function netBadge(){var n=document.getElementById('net'),q=G('outbox',[]).length;n.className=navigator.onLine?'':'off';n.textContent=(navigator.onLine?'متصل':'بدون إنترنت')+(q?(' • بانتظار الإرسال '+q):'');}
+window.addEventListener('online',function(){netBadge();flush();});window.addEventListener('offline',netBadge);
+function login(){A.innerHTML='<main><div class="card"><h3 style="margin:0 0 8px;color:#0a246a">تسجيل الدخول</h3><label>اسم المستخدم</label><input id="u" autocomplete="username"><label>الرقم السري</label><input id="p" type="password" autocomplete="current-password"><button class="btn" id="go">دخول</button><div id="err" class="bad" style="margin-top:8px"></div></div><p class="mut">نفس اسم المستخدم والرقم السري المستعملين في برنامج إيكوواط.</p></main>';
+ document.getElementById('go').onclick=function(){var u=document.getElementById('u').value,p=document.getElementById('p').value,er=document.getElementById('err');if(!u||!p){er.textContent='أدخل البيانات';return;}
+  var nu=String(u).trim().toLowerCase().replace(/[أإآ]/g,'ا');er.textContent='⏳ جارٍ التحقق…';
+  api({action:'auth:login',u:nu,h:credHash(u,p)}).then(function(r){if(!r||!r.ok){er.textContent=r&&r.error==='locked'?'تم إيقاف الدخول مؤقتاً بعد محاولات متكررة.':'اسم المستخدم أو الرقم السري غير صحيح.';return;}
+   P('token',r.token);P('user',r.user||{});load(true);}).catch(function(){er.textContent='تعذّر الاتصال بالخادم.';});};}
+function load(first){A.innerHTML='<main><div class="card">⏳ جارٍ تحميل بياناتك…</div></main>';
+ if(!navigator.onLine&&S.boot){render();return;}
+ api({action:'m:boot'}).then(function(r){if(r&&r.error==='session_expired'){P('token','');login();return;}
+  if(!r||!r.ok){if(S.boot){render();return;}A.innerHTML='<main><div class="card bad">'+E(r&&r.why||r&&r.error||'تعذّر التحميل')+'</div><button class="btn s" id="lo">خروج</button></main>';document.getElementById('lo').onclick=logout;return;}
+  r.at=Date.now();S.boot=r;P('boot',r);render();flush();}).catch(function(){if(S.boot)render();else A.innerHTML='<main><div class="card bad">لا يوجد اتصال، ولا بيانات محفوظة بعد. اتصل بالإنترنت مرة واحدة.</div></main>';});}
+function logout(){P('token','');P('boot',null);S.boot=null;login();}
+function nav(){return '<nav>'+[['cust','👥 عملائي'],['so','📦 طلب بيع'],['rc','📥 سند قبض'],['out','📤 صندوق الإرسال'],['comm','💰 عمولتي']].map(function(t){return '<button data-t="'+t[0]+'" class="'+(S.tab===t[0]?'on':'')+'">'+t[1]+'</button>';}).join('')+'</nav>';}
+function custOpts(sel){return '<option value="">— اختر العميل —</option>'+(S.boot.customers||[]).map(function(c){return '<option value="'+E(c.no)+'"'+(c.no===sel?' selected':'')+'>'+E(c.name)+'</option>';}).join('');}
+function custOf(no){return (S.boot.customers||[]).filter(function(c){return c.no===no;})[0]||null;}
+function render(){netBadge();var b=S.boot;A.innerHTML=nav()+'<main id="m"></main>';var M=document.getElementById('m');
+ [].forEach.call(A.querySelectorAll('nav button'),function(x){x.onclick=function(){S.tab=x.getAttribute('data-t');render();};});
+ var head='<div class="mut">المندوب: '+E(b.rep&&b.rep.name)+' • آخر تحديث: '+new Date(b.at||Date.now()).toLocaleString('ar')+' <a href="#" id="rf">تحديث</a> • <a href="#" id="lo">خروج</a></div>';
+ if(S.tab==='cust'){var tot=(b.customers||[]).reduce(function(s,c){return s+c.bal;},0);
+  M.innerHTML=head+'<div class="card row"><span>عدد العملاء: <b>'+(b.customers||[]).length+'</b></span><span>مجموع الأرصدة: <b class="num">'+fm(tot)+'</b></span></div><input id="q" placeholder="بحث بالاسم أو الهاتف">'+'<div id="cl"></div>';
+  var paint=function(){var q=document.getElementById('q').value.trim();document.getElementById('cl').innerHTML=(b.customers||[]).filter(function(c){return !q||(c.name+' '+c.phone+' '+c.no).indexOf(q)>-1;}).map(function(c){var over=c.limit&&c.bal>c.limit;return '<div class="card"><div class="row"><b>'+E(c.name)+'</b><b class="num '+(over?'bad':'')+'">'+fm(c.bal)+'</b></div><div class="mut">'+E([c.no,c.phone,c.region,c.limit?('السقف '+fm(c.limit)):''].filter(Boolean).join(' • '))+(over?' • <span class="bad">تجاوز السقف</span>':'')+'</div>'+(c.phone?'<div class="row" style="margin-top:6px"><a href="tel:'+E(c.phone)+'">📞 اتصال</a><a href="https://wa.me/'+E(String(c.phone).replace(/^0/,'970'))+'">💬 واتساب</a></div>':'')+'</div>';}).join('')||'<div class="mut">لا يوجد</div>';};
+  document.getElementById('q').oninput=paint;paint();}
+ if(S.tab==='so'){var L=[{t:'',q:1,p:''}];
+  M.innerHTML=head+'<div class="card"><label>العميل</label><select id="c">'+custOpts('')+'</select><label>الأصناف</label><div id="ls"></div><button class="btn s" id="add">＋ سطر</button><label>ملاحظات / شروط الدفع</label><textarea id="nt" rows="2"></textarea><div class="row" style="margin-top:8px"><span>الإجمالي</span><b class="num" id="tt">0.00</b></div><button class="btn" id="sv">📤 إرسال للموافقة</button></div>';
+  var lp=function(){document.getElementById('ls').innerHTML=L.map(function(l,i){return '<div class="ln"><input data-i="'+i+'" data-k="t" placeholder="الصنف" value="'+E(l.t)+'"><input data-i="'+i+'" data-k="q" type="number" inputmode="decimal" placeholder="كمية" value="'+E(l.q)+'"><input data-i="'+i+'" data-k="p" type="number" inputmode="decimal" placeholder="سعر" value="'+E(l.p)+'"><button class="x" data-del="'+i+'">✕</button></div>';}).join('');
+   [].forEach.call(document.querySelectorAll('#ls input'),function(x){x.oninput=function(){L[+x.getAttribute('data-i')][x.getAttribute('data-k')]=x.value;tt();};});[].forEach.call(document.querySelectorAll('[data-del]'),function(x){x.onclick=function(){L.splice(+x.getAttribute('data-del'),1);if(!L.length)L.push({t:'',q:1,p:''});lp();tt();};});};
+  var tt=function(){document.getElementById('tt').textContent=fm(L.reduce(function(s,l){return s+(Number(l.q)||0)*(Number(l.p)||0);},0));};
+  document.getElementById('add').onclick=function(){L.push({t:'',q:1,p:''});lp();};lp();
+  document.getElementById('sv').onclick=function(){var c=custOf(document.getElementById('c').value),ok=L.filter(function(l){return l.t&&Number(l.q)>0;});if(!c){alert('اختر العميل');return;}if(!ok.length){alert('أضف صنفاً واحداً على الأقل');return;}
+   var tot=ok.reduce(function(s,l){return s+(Number(l.q)||0)*(Number(l.p)||0);},0);
+   queue({kind:'so',id:uidReq(),data:{'العميل':c.name,'رقم حساب العميل':c.no,'الهاتف':c.phone,'الأصناف':ok.map(function(l){return l.t+' × '+l.q+' @ '+(l.p||'—');}).join(' | '),'الإجمالي':fm(tot),'ملاحظات':document.getElementById('nt').value,lines:ok,total:tot},label:'طلب بيع — '+c.name+' — '+fm(tot)});S.tab='out';render();};}
+ if(S.tab==='rc'){var photo='';
+  M.innerHTML=head+'<div class="card"><label>العميل</label><select id="c">'+custOpts('')+'</select><label>المبلغ</label><input id="am" type="number" inputmode="decimal"><label>العملة</label><select id="cu"><option>شيكل</option><option>دينار</option><option>دولار</option></select><label>طريقة الدفع</label><select id="pm"><option value="نقداً">نقداً</option><option value="شيك">شيك</option></select><div id="cq" style="display:none"><label>رقم الشيك</label><input id="cn" inputmode="numeric"><label>البنك</label><input id="bk"><label>تاريخ الاستحقاق</label><input id="du" type="date"><label>صورة الشيك</label><input id="ph" type="file" accept="image/*" capture="environment"><img class="prev" id="pv" style="display:none"></div><label>ملاحظات</label><textarea id="nt" rows="2"></textarea><button class="btn" id="sv">📤 إرسال للموافقة</button><div class="mut">يدخل كطلب على مسار الموافقات ولا يُرحَّل مباشرة.</div></div>';
+  document.getElementById('pm').onchange=function(){document.getElementById('cq').style.display=this.value==='شيك'?'':'none';};
+  document.getElementById('ph').onchange=function(e){var f=e.target.files&&e.target.files[0];if(!f)return;var img=new Image(),rd=new FileReader();rd.onload=function(){img.onload=function(){var s=Math.min(1,1400/Math.max(img.width,img.height)),cv=document.createElement('canvas');cv.width=img.width*s;cv.height=img.height*s;cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);photo=cv.toDataURL('image/jpeg',0.72);var pv=document.getElementById('pv');pv.src=photo;pv.style.display='';};img.src=rd.result;};rd.readAsDataURL(f);};
+  document.getElementById('sv').onclick=function(){var c=custOf(document.getElementById('c').value),am=Number(document.getElementById('am').value),pm=document.getElementById('pm').value;if(!c){alert('اختر العميل');return;}if(!(am>0)){alert('أدخل المبلغ');return;}
+   var d={'نوع السند':'سند قبض','استلمنا من':c.name,'رقم حساب العميل':c.no,'المبلغ':fm(am),'العملة':document.getElementById('cu').value,'طريقة الدفع':pm,'ملاحظات':document.getElementById('nt').value,'التاريخ':new Date().toISOString().slice(0,10),amount:am};
+   if(pm==='شيك'){d['رقم الشيك']=document.getElementById('cn').value;d['البنك']=document.getElementById('bk').value;d['تاريخ الاستحقاق']=document.getElementById('du').value;if(!d['رقم الشيك']){alert('أدخل رقم الشيك');return;}}
+   var item={kind:'rc',id:uidReq(),data:d,photo:photo,label:'سند قبض — '+c.name+' — '+fm(am)};
+   var go=function(){queue(item);S.tab='out';render();};
+   if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(p){item.gps={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy};go();},go,{timeout:6000,maximumAge:60000});}else go();};}
+ if(S.tab==='out'){var Q=G('outbox',[]),H=G('sent',[]);
+  M.innerHTML=head+'<div class="card"><b>بانتظار الإرسال ('+Q.length+')</b>'+(Q.length?Q.map(function(x){return '<div class="row" style="margin-top:6px"><span>'+E(x.label)+'</span><span class="mut">'+E(x.err||'⏳')+'</span></div>';}).join(''):'<div class="mut">لا شيء</div>')+'<button class="btn s" id="fl">↻ إرسال الآن</button></div><div class="card"><b>أُرسلت (آخر 30)</b>'+(H.length?H.slice(-30).reverse().map(function(x){return '<div class="row" style="margin-top:6px"><span>'+E(x.label)+'</span><span class="ok">✔ '+E(x.st||'')+'</span></div>';}).join(''):'<div class="mut">لا شيء</div>')+'</div>';
+  document.getElementById('fl').onclick=flush;}
+ if(S.tab==='comm'){var C=b.commission||[];M.innerHTML=head+'<div class="card"><b>عمولتي حسب الأشهر المقفلة</b>'+(C.length?C.map(function(x){return '<div class="row" style="margin-top:8px"><span>'+E(x.month)+'</span><span class="mut">مبيعات '+fm(x.sales)+' • تحصيل '+fm(x.collect)+' • '+E(x.rate)+'%</span><b class="num">'+fm(x.comm)+'</b></div>';}).join(''):'<div class="mut">لا توجد أشهر مقفلة بعد.</div>')+'</div>';}
+ var rf=document.getElementById('rf');if(rf)rf.onclick=function(e){e.preventDefault();load();};var lo=document.getElementById('lo');if(lo)lo.onclick=function(e){e.preventDefault();if(confirm('تسجيل الخروج؟'))logout();};}
+function queue(x){var Q=G('outbox',[]);Q.push(x);P('outbox',Q);netBadge();flush();}
+var FL=false;
+function flush(){if(FL||!navigator.onLine)return;var Q=G('outbox',[]);if(!Q.length)return;FL=true;var x=Q[0];
+ api({action:'m:submit',kind:x.kind,id:x.id,data:x.data,photo:x.photo||'',gps:x.gps||null}).then(function(r){FL=false;var Q2=G('outbox',[]);
+  if(r&&r.ok){Q2=Q2.filter(function(z){return z.id!==x.id;});P('outbox',Q2);var H=G('sent',[]);H.push({id:x.id,label:x.label,st:r.status==='pending_approval'?'بانتظار الموافقة':(r.status||''),at:Date.now()});P('sent',H.slice(-60));netBadge();if(S.tab==='out')render();if(Q2.length)setTimeout(flush,300);}
+  else if(r&&r.error==='session_expired'){logout();}
+  else{Q2.forEach(function(z){if(z.id===x.id)z.err='⛔ '+(r&&r.error||'خطأ');});P('outbox',Q2);if(S.tab==='out')render();}
+ }).catch(function(){FL=false;});}
+setInterval(function(){netBadge();flush();},30000);
+if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js');}catch(e){}}
+if(G('token',''))load();else login();
+</script>
+</body>
+</html>
