@@ -94,17 +94,24 @@ function render(){netBadge();var b=S.boot;A.innerHTML=nav()+'<main id="m"></main
  var head='<div class="mut">المندوب: '+E(b.rep&&b.rep.name)+' • آخر تحديث: '+new Date(b.at||Date.now()).toLocaleString('ar')+' <a href="#" id="rf">تحديث</a> • <a href="#" id="lo">خروج</a></div>';
  if(S.tab==='cust'){var tot=(b.customers||[]).reduce(function(s,c){return s+c.bal;},0);
   M.innerHTML=head+'<div class="card row"><span>عدد العملاء: <b>'+(b.customers||[]).length+'</b></span><span>مجموع الأرصدة: <b class="num">'+fm(tot)+'</b></span></div><input id="q" placeholder="بحث بالاسم أو الهاتف">'+'<div id="cl"></div>';
-  var paint=function(){var q=document.getElementById('q').value.trim();document.getElementById('cl').innerHTML=(b.customers||[]).filter(function(c){return !q||(c.name+' '+c.phone+' '+c.no).indexOf(q)>-1;}).map(function(c){var over=c.limit&&c.bal>c.limit;return '<div class="card"><div class="row"><b>'+E(c.name)+'</b><b class="num '+(over?'bad':'')+'">'+fm(c.bal)+'</b></div><div class="mut">'+E([c.no,c.phone,c.region,c.limit?('السقف '+fm(c.limit)):''].filter(Boolean).join(' • '))+(over?' • <span class="bad">تجاوز السقف</span>':'')+'</div>'+(c.phone?'<div class="row" style="margin-top:6px"><a href="tel:'+E(c.phone)+'">📞 اتصال</a><a href="https://wa.me/'+E(String(c.phone).replace(/^0/,'970'))+'">💬 واتساب</a></div>':'')+'</div>';}).join('')||'<div class="mut">لا يوجد</div>';};
+  var paint=function(){var q=document.getElementById('q').value.trim();document.getElementById('cl').innerHTML=(b.customers||[]).filter(function(c){return !q||(c.name+' '+c.phone+' '+c.no).indexOf(q)>-1;}).map(function(c){var over=c.limit&&c.bal>c.limit;return '<div class="card"><div class="row"><b>'+E(c.name)+'</b><b class="num '+(over?'bad':'')+'">'+fm(c.bal)+'</b></div><div class="mut">'+E([c.no,c.phone,c.region,c.limit?('السقف '+fm(c.limit)):''].filter(Boolean).join(' • '))+(over?' • <span class="bad">تجاوز السقف</span>':'')+'</div>'+(c.phone?'<div class="row" style="margin-top:6px"><a href="tel:'+E(c.phone)+'">📞 اتصال</a><a href="https://wa.me/'+E(String(c.phone).replace(/^0/,'970'))+'">💬 واتساب</a></div>':'')+'<button class="btn s" style="margin-top:8px;padding:9px" data-stm="'+E(c.no)+'">📄 كشف حساب للعميل</button></div>';}).join('')||'<div class="mut">لا يوجد</div>';
+   [].forEach.call(document.querySelectorAll('[data-stm]'),function(x){x.onclick=function(){stmtAsk(custOf(x.getAttribute('data-stm')));};});};
   document.getElementById('q').oninput=paint;paint();}
- if(S.tab==='so'){var L=[{t:'',q:1,p:''}];
-  M.innerHTML=head+'<div class="card"><label>العميل</label><select id="c">'+custOpts('')+'</select><label>الأصناف</label><div id="ls"></div><button class="btn s" id="add">＋ سطر</button><label>ملاحظات / شروط الدفع</label><textarea id="nt" rows="2"></textarea><div class="row" style="margin-top:8px"><span>الإجمالي</span><b class="num" id="tt">0.00</b></div><button class="btn" id="sv">📤 إرسال للموافقة</button></div>';
-  var lp=function(){document.getElementById('ls').innerHTML=L.map(function(l,i){return '<div class="ln"><input data-i="'+i+'" data-k="t" placeholder="الصنف" value="'+E(l.t)+'"><input data-i="'+i+'" data-k="q" type="number" inputmode="decimal" placeholder="كمية" value="'+E(l.q)+'"><input data-i="'+i+'" data-k="p" type="number" inputmode="decimal" placeholder="سعر" value="'+E(l.p)+'"><button class="x" data-del="'+i+'">✕</button></div>';}).join('');
-   [].forEach.call(document.querySelectorAll('#ls input'),function(x){x.oninput=function(){L[+x.getAttribute('data-i')][x.getAttribute('data-k')]=x.value;tt();};});[].forEach.call(document.querySelectorAll('[data-del]'),function(x){x.onclick=function(){L.splice(+x.getAttribute('data-del'),1);if(!L.length)L.push({t:'',q:1,p:''});lp();tt();};});};
+ if(S.tab==='so'){var IT=b.items||[],L=[{id:'',q:1,p:''}];
+  var itemOf=function(id){return IT.filter(function(x){return x.id===id;})[0]||null;};
+  var lbl=function(x){return x.code+' — '+x.name;};
+  M.innerHTML=head+'<div class="card"><label>العميل</label><select id="c">'+custOpts('')+'</select><label>الأصناف (من المستودع)</label><datalist id="itl">'+IT.map(function(x){return '<option value="'+E(lbl(x))+'">'+E((x.qty>0?('متوفر '+x.qty):'غير متوفر')+' • '+fm(x.price))+'</option>';}).join('')+'</datalist><div id="ls"></div><button class="btn s" id="add">＋ صنف</button><label>ملاحظات / شروط الدفع</label><textarea id="nt" rows="2"></textarea><div class="row" style="margin-top:8px"><span>الإجمالي</span><b class="num" id="tt">0.00</b></div><button class="btn" id="sv">📤 إرسال للموافقة</button>'+(IT.length?'':'<div class="bad" style="margin-top:6px">قائمة الأصناف غير محمّلة — اضغط «تحديث».</div>')+'</div>';
+  var lp=function(){document.getElementById('ls').innerHTML=L.map(function(l,i){var x=itemOf(l.id);return '<div class="card" style="padding:8px;margin:6px 0;background:#faf9f6"><input list="itl" data-i="'+i+'" data-k="it" placeholder="ابحث بالاسم أو الرمز" value="'+E(x?lbl(x):'')+'"><div class="mut" data-inf="'+i+'">'+(x?(E(x.cat)+' • متوفر: <b class="'+(x.qty>=Number(l.q)?'ok':'bad')+'">'+x.qty+'</b> '+E(x.unit)+' • السعر '+fm(x.price)+(x.min?(' • الحد الأدنى '+fm(x.min)):'')):'')+'</div><div class="ln" style="grid-template-columns:1fr 1fr 34px"><input data-i="'+i+'" data-k="q" type="number" inputmode="decimal" placeholder="الكمية" value="'+E(l.q)+'"><input data-i="'+i+'" data-k="p" type="number" inputmode="decimal" placeholder="السعر" value="'+E(l.p)+'"><button class="x" data-del="'+i+'">✕</button></div></div>';}).join('');
+   [].forEach.call(document.querySelectorAll('#ls input'),function(el){el.onchange=el.oninput=function(){var i=+el.getAttribute('data-i'),k=el.getAttribute('data-k');
+    if(k==='it'){var v=el.value,x=IT.filter(function(z){return lbl(z)===v||z.code===v.trim();})[0];if(x&&L[i].id!==x.id){L[i].id=x.id;L[i].p=x.price;lp();}else if(!x){L[i].id='';}}else{L[i][k]=el.value;}tt();};});
+   [].forEach.call(document.querySelectorAll('[data-del]'),function(x){x.onclick=function(){L.splice(+x.getAttribute('data-del'),1);if(!L.length)L.push({id:'',q:1,p:''});lp();tt();};});};
   var tt=function(){document.getElementById('tt').textContent=fm(L.reduce(function(s,l){return s+(Number(l.q)||0)*(Number(l.p)||0);},0));};
-  document.getElementById('add').onclick=function(){L.push({t:'',q:1,p:''});lp();};lp();
-  document.getElementById('sv').onclick=function(){var c=custOf(document.getElementById('c').value),ok=L.filter(function(l){return l.t&&Number(l.q)>0;});if(!c){alert('اختر العميل');return;}if(!ok.length){alert('أضف صنفاً واحداً على الأقل');return;}
-   var tot=ok.reduce(function(s,l){return s+(Number(l.q)||0)*(Number(l.p)||0);},0);
-   queue({kind:'so',id:uidReq(),data:{'العميل':c.name,'رقم حساب العميل':c.no,'الهاتف':c.phone,'الأصناف':ok.map(function(l){return l.t+' × '+l.q+' @ '+(l.p||'—');}).join(' | '),'الإجمالي':fm(tot),'ملاحظات':document.getElementById('nt').value,lines:ok,total:tot},label:'طلب بيع — '+c.name+' — '+fm(tot)});S.tab='out';render();};}
+  document.getElementById('add').onclick=function(){L.push({id:'',q:1,p:''});lp();};lp();
+  document.getElementById('sv').onclick=function(){var c=custOf(document.getElementById('c').value),ok=L.filter(function(l){return l.id&&Number(l.q)>0;});if(!c){alert('اختر العميل');return;}if(!ok.length){alert('اختر صنفاً واحداً على الأقل من القائمة');return;}
+   var low=ok.filter(function(l){var x=itemOf(l.id);return x&&x.min&&Number(l.p)<x.min;});if(low.length&&!confirm('سعر '+low.length+' صنف أقل من الحد الأدنى — يحتاج موافقة المدير. متابعة؟'))return;
+   var lines=ok.map(function(l){var x=itemOf(l.id);return {itemId:x.id,code:x.code,name:x.name,qty:Number(l.q),price:Number(l.p)||0,listPrice:x.price,minPrice:x.min,stock:x.qty};});
+   var tot=lines.reduce(function(s,l){return s+l.qty*l.price;},0);
+   queue({kind:'so',id:uidReq(),data:{'العميل':c.name,'رقم حساب العميل':c.no,'الهاتف':c.phone,'الأصناف':lines.map(function(l){return l.code+' '+l.name+' × '+l.qty+' @ '+fm(l.price)+(l.minPrice&&l.price<l.minPrice?' ⚠ أقل من الحد الأدنى':'');}).join(' | '),'الإجمالي':fm(tot),'ملاحظات':document.getElementById('nt').value,lines:lines,total:tot},label:'طلب بيع — '+c.name+' — '+fm(tot)});S.tab='out';render();};}
  if(S.tab==='rc'){var photo='';
   M.innerHTML=head+'<div class="card"><label>العميل</label><select id="c">'+custOpts('')+'</select><label>المبلغ</label><input id="am" type="number" inputmode="decimal"><label>العملة</label><select id="cu"><option>شيكل</option><option>دينار</option><option>دولار</option></select><label>طريقة الدفع</label><select id="pm"><option value="نقداً">نقداً</option><option value="شيك">شيك</option></select><div id="cq" style="display:none"><label>رقم الشيك</label><input id="cn" inputmode="numeric"><label>البنك</label><input id="bk"><label>تاريخ الاستحقاق</label><input id="du" type="date"><label>صورة الشيك</label><input id="ph" type="file" accept="image/*" capture="environment"><img class="prev" id="pv" style="display:none"></div><label>ملاحظات</label><textarea id="nt" rows="2"></textarea><button class="btn" id="sv">📤 إرسال للموافقة</button><div class="mut">يدخل كطلب على مسار الموافقات ولا يُرحَّل مباشرة.</div></div>';
   document.getElementById('pm').onchange=function(){document.getElementById('cq').style.display=this.value==='شيك'?'':'none';};
@@ -113,18 +120,97 @@ function render(){netBadge();var b=S.boot;A.innerHTML=nav()+'<main id="m"></main
    var d={'نوع السند':'سند قبض','استلمنا من':c.name,'رقم حساب العميل':c.no,'المبلغ':fm(am),'العملة':document.getElementById('cu').value,'طريقة الدفع':pm,'ملاحظات':document.getElementById('nt').value,'التاريخ':new Date().toISOString().slice(0,10),amount:am};
    if(pm==='شيك'){d['رقم الشيك']=document.getElementById('cn').value;d['البنك']=document.getElementById('bk').value;d['تاريخ الاستحقاق']=document.getElementById('du').value;if(!d['رقم الشيك']){alert('أدخل رقم الشيك');return;}}
    var item={kind:'rc',id:uidReq(),data:d,photo:photo,label:'سند قبض — '+c.name+' — '+fm(am)};
-   var go=function(){queue(item);S.tab='out';render();};
+   var go=function(){queue(item);S.tab='out';render();rcProvisional(item);};
    if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(p){item.gps={lat:p.coords.latitude,lng:p.coords.longitude,acc:p.coords.accuracy};go();},go,{timeout:6000,maximumAge:60000});}else go();};}
  if(S.tab==='out'){var Q=G('outbox',[]),H=G('sent',[]);
-  M.innerHTML=head+'<div class="card"><b>بانتظار الإرسال ('+Q.length+')</b>'+(Q.length?Q.map(function(x){return '<div class="row" style="margin-top:6px"><span>'+E(x.label)+'</span><span class="mut">'+E(x.err||'⏳')+'</span></div>';}).join(''):'<div class="mut">لا شيء</div>')+'<button class="btn s" id="fl">↻ إرسال الآن</button></div><div class="card"><b>أُرسلت (آخر 30)</b>'+(H.length?H.slice(-30).reverse().map(function(x){return '<div class="row" style="margin-top:6px"><span>'+E(x.label)+'</span><span class="ok">✔ '+E(x.st||'')+'</span></div>';}).join(''):'<div class="mut">لا شيء</div>')+'</div>';
-  document.getElementById('fl').onclick=flush;}
+  M.innerHTML=head+'<div class="card"><b>بانتظار الإرسال ('+Q.length+')</b>'+(Q.length?Q.map(function(x){return '<div class="row" style="margin-top:6px"><span>'+E(x.label)+'</span><span class="mut">'+E(x.err||'⏳')+'</span></div>'+(x.kind==='rc'?'<button class="btn s" style="padding:8px;margin-top:4px" data-pq="'+E(x.id)+'">🧾 إشعار استلام مبدئي</button>':'');}).join(''):'<div class="mut">لا شيء</div>')+'<button class="btn s" id="fl">↻ إرسال الآن</button></div><div class="card"><b>أُرسلت (آخر 30)</b>'+(H.length?H.slice(-30).reverse().map(function(x){return '<div class="row" style="margin-top:10px"><span>'+E(x.label)+'</span><span class="ok">✔ '+E(x.st||'')+'</span></div>'+(x.kind==='rc'&&x.data?'<div class="row"><button class="btn s" style="padding:8px;margin-top:4px" data-ph="'+E(x.id)+'">🧾 إشعار مبدئي</button><button class="btn" style="padding:8px;margin-top:4px" data-of="'+E(x.id)+'">✅ السند الرسمي</button></div>':'');}).join(''):'<div class="mut">لا شيء</div>')+'</div>';
+  document.getElementById('fl').onclick=flush;
+  var fin=function(L,id){return L.filter(function(z){return z.id===id;})[0];};
+  [].forEach.call(M.querySelectorAll('[data-pq]'),function(b){b.onclick=function(){rcProvisional(fin(G('outbox',[]),b.getAttribute('data-pq')));};});
+  [].forEach.call(M.querySelectorAll('[data-ph]'),function(b){b.onclick=function(){rcProvisional(fin(G('sent',[]),b.getAttribute('data-ph')));};});
+  [].forEach.call(M.querySelectorAll('[data-of]'),function(b){b.onclick=function(){rcOfficial(fin(G('sent',[]),b.getAttribute('data-of')));};});}
  if(S.tab==='comm'){var C=b.commission||[];M.innerHTML=head+'<div class="card"><b>عمولتي حسب الأشهر المقفلة</b>'+(C.length?C.map(function(x){return '<div class="row" style="margin-top:8px"><span>'+E(x.month)+'</span><span class="mut">مبيعات '+fm(x.sales)+' • تحصيل '+fm(x.collect)+' • '+E(x.rate)+'%</span><b class="num">'+fm(x.comm)+'</b></div>';}).join(''):'<div class="mut">لا توجد أشهر مقفلة بعد.</div>')+'</div>';}
  var rf=document.getElementById('rf');if(rf)rf.onclick=function(e){e.preventDefault();load();};var lo=document.getElementById('lo');if(lo)lo.onclick=function(e){e.preventDefault();if(confirm('تسجيل الخروج؟'))logout();};}
+/* ===== مستندات للعميل: إشعار استلام مبدئي • سند قبض رسمي • كشف حساب — صورة أو PDF ومشاركة إلى واتساب ===== */
+function modal(title,html,btns){var o=document.createElement('div');o.style.cssText='position:fixed;inset:0;background:rgba(10,36,106,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center';
+ o.innerHTML='<div style="background:#fff;width:100%;max-width:520px;border-radius:16px 16px 0 0;padding:16px;max-height:90vh;overflow:auto"><h3 style="margin:0 0 8px;color:#0a246a">'+E(title)+'</h3>'+html+'<div id="mb"></div></div>';
+ var B=o.querySelector('#mb');(btns||[]).concat([['إغلاق',null,1]]).forEach(function(b){var x=document.createElement('button');x.className='btn'+(b[2]?' s':'');x.textContent=b[0];x.onclick=function(){if(b[1]){var r=b[1](o);if(r===false)return;}o.remove();};B.appendChild(x);});
+ o.addEventListener('click',function(e){if(e.target===o)o.remove();});document.body.appendChild(o);return o;}
+var PW=1240,PH=1754,MX=70;
+function lh(){return (S.boot&&S.boot.lh)||{name:'إيكوواط'};}
+function wrapText(c,t,w){var words=String(t||'').split(' '),lines=[],cur='';words.forEach(function(x){var tr=cur?cur+' '+x:x;if(c.measureText(tr).width>w&&cur){lines.push(cur);cur=x;}else cur=tr;});if(cur)lines.push(cur);return lines;}
+function pageStart(spec,pn,pages){var cv=document.createElement('canvas');cv.width=PW;cv.height=PH;var c=cv.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,PW,PH);c.direction='rtl';
+ var h=lh();c.fillStyle='#0a246a';c.fillRect(0,0,PW,170);c.fillStyle='#ff8c00';c.fillRect(0,170,PW,8);
+ c.fillStyle='#fff';c.textAlign='right';c.font='bold 34px Tahoma, Arial, sans-serif';wrapText(c,h.name,PW-2*MX).slice(0,2).forEach(function(l,i){c.fillText(l,PW-MX,62+i*42);});
+ c.font='20px Tahoma, Arial, sans-serif';c.textAlign='left';c.direction='ltr';if(h.en)c.fillText(h.en.slice(0,90),MX,150);c.direction='rtl';c.textAlign='right';
+ c.fillStyle='#4b5563';c.font='20px Tahoma, Arial, sans-serif';if(h.addr)c.fillText(h.addr,PW-MX,210);
+ c.fillStyle='#0a246a';c.font='bold 44px Tahoma, Arial, sans-serif';c.fillText(spec.title,PW-MX,285);
+ var y=300;if(spec.badge){c.font='bold 26px Tahoma, Arial, sans-serif';var w=c.measureText(spec.badge).width+40;c.fillStyle=spec.badgeColor||'#fff4e5';c.fillRect(PW-MX-w,y,w,48);c.strokeStyle=spec.badgeLine||'#ff8c00';c.lineWidth=3;c.strokeRect(PW-MX-w,y,w,48);c.fillStyle=spec.badgeText||'#8a4b00';c.fillText(spec.badge,PW-MX-20,y+33);y+=70;}
+ c.font='20px Tahoma, Arial, sans-serif';c.fillStyle='#6b7280';c.textAlign='left';c.fillText('صفحة '+pn+' / '+pages,MX,PH-40);c.textAlign='right';
+ c.fillText((spec.footer||'')+' • '+new Date().toLocaleString('ar'),PW-MX,PH-40);c.strokeStyle='#e8e6e0';c.lineWidth=2;c.beginPath();c.moveTo(MX,PH-75);c.lineTo(PW-MX,PH-75);c.stroke();
+ return {cv:cv,c:c,y:y+10};}
+function drawFields(P,F){var c=P.c,y=P.y;F.forEach(function(f){c.font='22px Tahoma, Arial, sans-serif';c.fillStyle='#6b7280';c.textAlign='right';c.fillText(f[0],PW-MX,y+30);c.font='bold 28px Tahoma, Arial, sans-serif';c.fillStyle='#111827';
+ var lines=wrapText(c,f[1],PW-2*MX-280);lines.forEach(function(l,i){c.fillText(l,PW-MX-280,y+30+i*38);});y+=Math.max(1,lines.length)*38+18;c.strokeStyle='#f1f1ef';c.beginPath();c.moveTo(MX,y-8);c.lineTo(PW-MX,y-8);c.stroke();});P.y=y+10;}
+function renderDoc(spec){/* spec: title,badge,fields,table{heads,w,rows,num},after(fields),footer,sign */
+ var pages=[],rows=(spec.table&&spec.table.rows)||[],per=0;
+ function newPage(){var P=pageStart(spec,pages.length+1,0);pages.push(P);return P;}
+ var P=newPage();drawFields(P,spec.fields||[]);
+ if(spec.table){var T=spec.table,W=T.w,c,xR;var head=function(P){c=P.c;c.fillStyle='#0a246a';c.fillRect(MX,P.y,PW-2*MX,50);c.fillStyle='#fff';c.font='bold 21px Tahoma, Arial, sans-serif';xR=PW-MX;T.heads.forEach(function(h,i){c.textAlign='right';c.fillText(h,xR-10,P.y+33);xR-=W[i];});P.y+=50;};
+  head(P);rows.forEach(function(r,ri){if(P.y>PH-200){P=newPage();head(P);}c=P.c;if(ri%2){c.fillStyle='#faf9f6';c.fillRect(MX,P.y,PW-2*MX,44);}c.fillStyle='#111827';c.font='20px Tahoma, Arial, sans-serif';xR=PW-MX;
+   r.forEach(function(v,i){var s=String(v==null?'':v);if(T.num&&T.num[i]){c.direction='ltr';c.textAlign='left';c.fillText(s,xR-W[i]+10,P.y+30);c.direction='rtl';}else{c.textAlign='right';while(s.length>3&&c.measureText(s).width>W[i]-16)s=s.slice(0,-2);c.fillText(s,xR-10,P.y+30);}xR-=W[i];});P.y+=44;});P.y+=20;}
+ if(spec.after){if(P.y>PH-120-spec.after.length*60)P=newPage();drawFields(P,spec.after);}
+ if(spec.sign){var c2=P.c;c2.font='22px Tahoma, Arial, sans-serif';c2.fillStyle='#374151';c2.textAlign='right';c2.fillText(spec.sign,PW-MX,Math.min(P.y+80,PH-110));}
+ /* أرقام الصفحات بعد معرفة العدد */
+ pages.forEach(function(p,i){var c=p.c;c.fillStyle='#fff';c.fillRect(MX,PH-62,260,30);c.fillStyle='#6b7280';c.font='20px Tahoma, Arial, sans-serif';c.textAlign='left';c.fillText('صفحة '+(i+1)+' / '+pages.length,MX,PH-40);});
+ return pages.map(function(p){return p.cv;});}
+function b64bytes(d){var s=atob(d.split(',')[1]),a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a;}
+function makePdf(canvases){/* PDF بسيط: كل صفحة صورة JPEG بحجم A4 */
+ var enc=new TextEncoder(),parts=[],off=0,xref=[];function add(x){var b=typeof x==='string'?enc.encode(x):x;parts.push(b);off+=b.length;}
+ add('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'.replace(/[\xE2\xE3\xCF\xD3]/g,'A'));var n=canvases.length,objs=2+n*3;
+ xref[1]=off;add('1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n');
+ xref[2]=off;add('2 0 obj<</Type/Pages/Count '+n+'/Kids['+canvases.map(function(_,i){return (3+i*3)+' 0 R';}).join(' ')+']>>endobj\n');
+ canvases.forEach(function(cv,i){var p=3+i*3,im=p+1,ct=p+2,jpg=b64bytes(cv.toDataURL('image/jpeg',0.85)),cs='q 595.28 0 0 841.89 0 0 cm /Im0 Do Q';
+  xref[p]=off;add(p+' 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595.28 841.89]/Resources<</XObject<</Im0 '+im+' 0 R>>>>/Contents '+ct+' 0 R>>endobj\n');
+  xref[im]=off;add(im+' 0 obj<</Type/XObject/Subtype/Image/Width '+cv.width+'/Height '+cv.height+'/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length '+jpg.length+'>>stream\n');add(jpg);add('\nendstream endobj\n');
+  xref[ct]=off;add(ct+' 0 obj<</Length '+cs.length+'>>stream\n'+cs+'\nendstream endobj\n');});
+ var xo=off,t='xref\n0 '+(objs+1)+'\n0000000000 65535 f \n';for(var k=1;k<=objs;k++)t+=String(xref[k]).padStart(10,'0')+' 00000 n \n';add(t+'trailer<</Size '+(objs+1)+'/Root 1 0 R>>\nstartxref\n'+xo+'\n%%EOF');
+ return new Blob(parts,{type:'application/pdf'});}
+function toBlob(cv){return new Promise(function(res){cv.toBlob(function(b){res(b);},'image/png');});}
+function shareFiles(files,text,phone){var can=navigator.canShare&&navigator.canShare({files:files});
+ if(can){return navigator.share({files:files,text:text}).catch(function(e){if(e&&e.name!=='AbortError')dlFiles(files,text,phone);});}
+ return dlFiles(files,text,phone);}
+function dlFiles(files,text,phone){files.forEach(function(f){var a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();setTimeout(function(){a.remove();},1000);});
+ if(phone)setTimeout(function(){window.open('https://wa.me/'+String(phone).replace(/\D/g,'').replace(/^0/,'970')+'?text='+encodeURIComponent(text),'_blank');},800);
+ alert('نُزّل الملف على الجوال — أرفقه في واتساب العميل.');return Promise.resolve();}
+function sendDoc(spec,name,kind,text,phone){var pages=renderDoc(spec);
+ if(kind==='pdf'){var f=new File([makePdf(pages)],name+'.pdf',{type:'application/pdf'});return shareFiles([f],text,phone);}
+ return Promise.all(pages.map(toBlob)).then(function(bs){return shareFiles(bs.map(function(b,i){return new File([b],name+(bs.length>1?('-'+(i+1)):'')+'.png',{type:'image/png'});}),text,phone);});}
+function rcSpec(x,official,st){var d=x.data||{},c=custOf(d['رقم حساب العميل'])||{};var F=[['استلمنا من',d['استلمنا من']],['رقم الحساب',d['رقم حساب العميل']],['المبلغ',d['المبلغ']+' '+(d['العملة']||'')],['طريقة الدفع',d['طريقة الدفع']]];
+ if(d['رقم الشيك'])F.push(['الشيك','رقم '+d['رقم الشيك']+' • '+(d['البنك']||'')+' • استحقاق '+(d['تاريخ الاستحقاق']||'')]);if(d['ملاحظات'])F.push(['ملاحظات',d['ملاحظات']]);
+ F.push(['التاريخ',d['التاريخ']||'']);F.push(['المندوب',(S.boot.rep&&S.boot.rep.name)||'']);
+ if(official){F.unshift(['رقم السند',st.voucher?(st.voucher.number+' (قيد '+st.voucher.journal+')'):('معتمد برقم '+(st.approvalNo||x.id))]);}else F.unshift(['رقم الطلب',x.id]);
+ return {title:official?'سند قبض':'إشعار استلام',badge:official?'✔ معتمد من الإدارة':'إشعار استلام مبدئي — بانتظار اعتماد الإدارة',badgeColor:official?'#e9f7ee':'#fff4e5',badgeLine:official?'#127a3c':'#ff8c00',badgeText:official?'#127a3c':'#8a4b00',fields:F,
+  sign:official?'':'هذا الإشعار يثبت استلام المندوب للمبلغ، ويصدر السند الرسمي بعد اعتماد الإدارة.',footer:'صادر من تطبيق المندوب'};}
+function askSend(title,mk,name,text,phone){modal(title,'<p class="mut">اختر الشكل ثم اختر واتساب والعميل من قائمة المشاركة.</p>',[['🖼 إرسال كصورة',function(){sendDoc(mk(),name,'img',text,phone);}],['📄 إرسال كـ PDF',function(){sendDoc(mk(),name,'pdf',text,phone);}]]);}
+function rcProvisional(x){var d=x.data||{},c=custOf(d['رقم حساب العميل'])||{};askSend('🧾 إشعار استلام مبدئي للعميل',function(){return rcSpec(x,false);},'اشعار-استلام-'+x.id,'إشعار استلام مبدئي من إيكوواط بمبلغ '+d['المبلغ']+' '+(d['العملة']||'')+' — رقم الطلب '+x.id,c.phone);}
+function rcOfficial(x){if(!navigator.onLine){alert('يحتاج اتصالاً بالإنترنت لمعرفة حالة السند.');return;}
+ api({action:'m:status',ids:[x.id]}).then(function(r){var st=r&&r.ok&&r.list&&r.list[0];if(!st){alert('تعذّر معرفة الحالة.');return;}
+  if(!/approved|completed/.test(st.status)){alert(st.status==='pending_approval'?'السند ما زال بانتظار موافقة الإدارة.':st.status==='rejected'?'رُفض الطلب'+(st.note?(': '+st.note):'')+'.':st.status==='returned'?'أُعيد الطلب للتعديل'+(st.note?(': '+st.note):'')+'.':('الحالة: '+st.status));return;}
+  var d=x.data||{},c=custOf(d['رقم حساب العميل'])||{};askSend('✅ سند القبض الرسمي',function(){return rcSpec(x,true,st);},'سند-قبض-'+((st.voucher&&st.voucher.number)||st.approvalNo||x.id),'سند قبض من إيكوواط بمبلغ '+d['المبلغ']+' '+(d['العملة']||''),c.phone);});}
+function stmtAsk(c){var y=new Date().getFullYear()+'-01-01',t=new Date().toISOString().slice(0,10);
+ modal('📄 كشف حساب — '+c.name,'<label>من تاريخ</label><input type="date" id="sf" value="'+y+'"><label>إلى تاريخ</label><input type="date" id="st" value="'+t+'">',[['عرض وإرسال ←',function(o){return stmtGo(c,o);}]]);}
+function stmtGo(c,o){if(!navigator.onLine){alert('كشف الحساب يحتاج اتصالاً بالإنترنت.');return false;}var f=o.querySelector('#sf').value,t=o.querySelector('#st').value;
+ api({action:'m:stmt',custNo:c.no,from:f,to:t}).then(function(r){if(!r||!r.ok){alert(r&&r.why||r&&r.error||'تعذّر');return;}
+  var spec={title:'كشف حساب',badge:'من '+(r.from||'البداية')+' إلى '+r.to,badgeColor:'#eef2f7',badgeLine:'#0a246a',badgeText:'#0a246a',fields:[['العميل',r.customer.name],['رقم الحساب',r.customer.no],['الرصيد السابق',fm(r.opening)]],
+   table:{heads:['التاريخ','المستند','البيان','مدين','دائن','الرصيد'],w:[150,130,400,140,140,140],num:{3:1,4:1,5:1},rows:r.rows.map(function(x){return [x.date,x.no,(x.type?x.type+' — ':'')+x.desc,x.d?fm(x.d):'',x.c?fm(x.c):'',fm(x.bal)];})},
+   after:[['الرصيد الحالي',fm(r.closing)+(r.closing>0?' (مدين — مستحق على العميل)':r.closing<0?' (دائن)':'')]],footer:'صادر من تطبيق المندوب'};
+  askSend('📄 كشف حساب — '+r.customer.name+' ('+r.rows.length+' حركة • الرصيد '+fm(r.closing)+')',function(){return spec;},'كشف-حساب-'+r.customer.no+'-'+r.to,'كشف حساب من إيكوواط — الرصيد الحالي '+fm(r.closing),r.customer.phone);});return true;}
+
 function queue(x){var Q=G('outbox',[]);Q.push(x);P('outbox',Q);netBadge();flush();}
 var FL=false;
 function flush(){if(FL||!navigator.onLine)return;var Q=G('outbox',[]);if(!Q.length)return;FL=true;var x=Q[0];
  api({action:'m:submit',kind:x.kind,id:x.id,data:x.data,photo:x.photo||'',gps:x.gps||null}).then(function(r){FL=false;var Q2=G('outbox',[]);
-  if(r&&r.ok){Q2=Q2.filter(function(z){return z.id!==x.id;});P('outbox',Q2);var H=G('sent',[]);H.push({id:x.id,label:x.label,st:r.status==='pending_approval'?'بانتظار الموافقة':(r.status||''),at:Date.now()});P('sent',H.slice(-60));netBadge();if(S.tab==='out')render();if(Q2.length)setTimeout(flush,300);}
+  if(r&&r.ok){Q2=Q2.filter(function(z){return z.id!==x.id;});P('outbox',Q2);var H=G('sent',[]);H.push({id:x.id,kind:x.kind,label:x.label,data:x.kind==='rc'?x.data:null,st:r.status==='pending_approval'?'بانتظار الموافقة':(r.status||''),at:Date.now()});P('sent',H.slice(-60));netBadge();if(S.tab==='out')render();if(Q2.length)setTimeout(flush,300);}
   else if(r&&r.error==='session_expired'){logout();}
   else{Q2.forEach(function(z){if(z.id===x.id)z.err='⛔ '+(r&&r.error||'خطأ');});P('outbox',Q2);if(S.tab==='out')render();}
  }).catch(function(){FL=false;});}
