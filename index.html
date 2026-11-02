@@ -26,7 +26,7 @@ label{display:block;margin:8px 0 3px;font-size:13px;color:var(--m)}input,select,
 <header><b>إيكوواط — المندوب</b><span id="net">متصل</span></header>
 <div id="app"></div>
 <script>
-/* ===== ECOwatt 20261287 — تطبيق المندوب (البند 13 — النسخة الأولى: المندوب فقط) =====
+/* ===== ECOwatt 20261287 — تطبيق المندوب (آخر تعديل 20261321: زيارة غير عميل) (البند 13 — النسخة الأولى: المندوب فقط) =====
    • الدخول بنفس اسم المستخدم والرقم السري • الصلاحيات من الخادم
    • عملائي وأرصدتهم • طلب بيع • سند قبض (نقد أو شيك مع صورة) • عمولتي
    • يعمل بدون إنترنت: البيانات من آخر تحميل، والطلبات تُحفظ في «صندوق الإرسال» وتُرسل تلقائياً عند رجوع الاتصال بنفس الرقم (لا تكرار)
@@ -317,6 +317,49 @@ function flush(){if(FL||!navigator.onLine)return;var Q=G('outbox',[]);if(!Q.leng
   else{Q2.forEach(function(z){if(z.id===x.id)z.err='⛔ '+(R2K[x.kind]?errAr(r):(r&&r.error||'خطأ'));});P('outbox',Q2);if(S.tab==='out')render();
    /* 20261299: تعثّر طلب من الأنواع الجديدة لا يوقف إرسال ما بعده (يُنقل لآخر الصندوق) */if(R2K[x.kind]&&Q2.length>1&&!x.__rot){var Q3=Q2.filter(function(z){return z.id!==x.id;});x.__rot=1;Q2.filter(function(z){return z.id===x.id;}).forEach(function(z){z.__rot=1;Q3.push(z);});P('outbox',Q3);setTimeout(flush,300);}}
  }).catch(function(){FL=false;});}
+/* ===== 20261321 (nc) — زيارة غير عميل + تنبيه الهاتف المكرر + قائمة المتابعة (أوامر الخادم P21: r2:boot / r2:dup / r2:submit) =====
+   • تظهر فقط إذا أعلن الخادم الميزة (r2:boot ← nc.on=1). إيقاف P21 على الخادم (P21_OFF=1) أو __REP_FLAT.nc=0 يعيد التطبيق كما كان حرفياً.
+   • لا تُمس الزيارات لعملاء الشركة ولا عرض السعر ولا العميل الجديد: الدوال الأصلية تُستدعى كما هي.
+   • الهاتف المكرر: يُفحص قبل بدء الزيارة إن كان هناك اتصال، ويرفضه الخادم عند الإرسال إن لم يُؤكَّد — ويظهر زر «تأكيد» في صندوق الإرسال. */
+var __REP_FLAT=window.__REP_FLAT||{nc:1};
+function NCON(){return __REP_FLAT.nc!==0&&R2ST()==='ok'&&!!(R2D().nc&&R2D().nc.on);}
+function NCST(){var s=(R2D().nc&&R2D().nc.st)||{};return {interested:s.interested||'مهتم',notinterested:s.notinterested||'غير مهتم',follow:s.follow||'يحتاج متابعة'};}
+function ncHitsHtml(H){return '<div class="card" style="border:2px solid #ff8c00;background:#fff8ee"><b>⚠ رقم الهاتف مسجّل مسبقاً ('+H.length+')</b>'+H.map(function(h){return '<div class="row" style="margin-top:6px"><span>'+E(h.src||'')+' — '+E(h.name||'')+'</span><span class="mut">'+E([h.date,h.ist].filter(Boolean).join(' • '))+'</span></div>';}).join('')+'<div class="mut" style="margin-top:6px">تأكد أنها جهة مختلفة قبل المتابعة.</div></div>';}
+function ncDup(phone){if(!phone||!navigator.onLine)return Promise.resolve(null);return api({action:'r2:dup',phone:phone}).then(function(r){return (r&&r.ok&&Array.isArray(r.hits))?r.hits:null;},function(){return null;});}
+function ncStart(o){/* o: {planId,name,phone,addr,dupOk} — نفس arrive الأصلية مع بيانات غير العميل */
+ if(G('vopen',null)){alert('أنهِ الزيارة الجارية أولاً («غادرت»).');return;}var at=new Date().toISOString();
+ var go=function(g){var v={id:uidReq(),planId:o.planId||'',custNo:'',name:o.name,nc:{phone:o.phone||'',addr:o.addr||'',dupOk:o.dupOk?1:0},in:{at:at,lat:g?g.lat:null,lng:g?g.lng:null,acc:g?g.acc:null}};v.dist=null;P('vopen',v);render();};
+ if(!navigator.geolocation){go(null);return;}navigator.geolocation.getCurrentPosition(function(p){go({lat:p.coords.latitude,lng:p.coords.longitude,acc:Math.round(p.coords.accuracy||0)});},function(){go(null);},{enableHighAccuracy:true,timeout:10000,maximumAge:30000});}
+function ncNew(pre){pre=pre||{};
+ var mo=modal('🏪 زيارة لغير عميل — جهة جديدة','<label>اسم الجهة / المحل *</label><input id="cn" value="'+E(pre.name||'')+'"><label>الهاتف</label><input id="cp" inputmode="tel" value="'+E(pre.phone||'')+'"><div id="cd"></div><label>العنوان</label><input id="ca" value="'+E(pre.addr||'')+'"><p class="mut">تُرسل الزيارة كطلب موافقة «زيارة عميل» — نوعها «غير عميل».</p>',
+ [['📍 وصلت — بدء الزيارة',function(o){var n=o.querySelector('#cn').value.trim(),ph=o.querySelector('#cp').value.trim(),ad=o.querySelector('#ca').value.trim();if(!n){alert('اسم الجهة / المحل مطلوب');return false;}
+   if(o.__ok===ph){ncStart({planId:pre.planId,name:n,phone:ph,addr:ad,dupOk:1});return;}
+   var bt=this;ncDup(ph).then(function(H){if(H&&H.length){o.querySelector('#cd').innerHTML=ncHitsHtml(H)+'<div class="mut bad">اضغط «📍 وصلت» مرة ثانية للمتابعة رغم التكرار.</div>';o.__ok=ph;return;}
+     o.remove();ncStart({planId:pre.planId,name:n,phone:ph,addr:ad,dupOk:0});});return false;}]]);
+ mo.setAttribute('data-modal','1');
+ var cp=mo.querySelector('#cp');cp.addEventListener('change',function(){var ph=cp.value.trim();mo.__ok=null;mo.querySelector('#cd').innerHTML='';ncDup(ph).then(function(H){if(H&&H.length)mo.querySelector('#cd').innerHTML=ncHitsHtml(H);});});}
+function ncLeave(v){var S2=NCST();
+ modal('🚪 نتيجة الزيارة — '+v.name,'<div class="mut">غير عميل'+(v.nc.phone?' • '+E(v.nc.phone):'')+'</div><label>حالة الجهة *</label><select id="vi"><option value="">— اختر —</option><option value="interested">'+E(S2.interested)+'</option><option value="follow">'+E(S2.follow)+'</option><option value="notinterested">'+E(S2.notinterested)+'</option></select><label>النتيجة</label><select id="vr"><option>متابعة</option><option>طلب</option><option>تحصيل</option><option>لا شيء</option></select><label>ملاحظة</label><textarea id="vn" rows="3"></textarea><p class="mut">تُرسل الزيارة كطلب موافقة «زيارة عميل» ولا تُرحَّل مباشرة.</p>',
+ [['📤 إرسال الزيارة',function(o){var ist=o.querySelector('#vi').value;if(!ist){alert('اختر حالة الجهة');return false;}var res=o.querySelector('#vr').value,nt=o.querySelector('#vn').value;
+   queue({kind:'visit',id:v.id,data:{__r2:{kind:'nc',name:v.name,phone:v.nc.phone,addr:v.nc.addr,ist:ist,result:res,note:nt,in:v.in,out:{at:new Date().toISOString()},planId:v.planId||'',dupOk:v.nc.dupOk?1:0}},gps:v.in&&v.in.lat!=null?{lat:v.in.lat,lng:v.in.lng,acc:v.in.acc}:null,label:'زيارة غير عميل — '+v.name+' — '+(S2[ist]||'')});P('vopen',null);render();}]]).setAttribute('data-modal','1');}
+/* تغليف «غادرت»: غير العميل له نافذته، والباقي كما هو */
+var __leave0=leave;leave=function(){var v=G('vopen',null);if(NCON()&&v&&v.nc)return ncLeave(v);return __leave0.apply(this,arguments);};
+/* تغليف خط السير: الخطط لغير العملاء + زر زيارة غير عميل + قائمة المتابعة */
+var __route0=r2Route;r2Route=function(M,head){__route0.apply(this,arguments);if(!NCON())return;
+ var d=R2D(),t=ymdL(),td=(d.plans||[]).filter(function(p){return p.date===t;}),vo=G('vopen',null);
+ [].forEach.call(M.querySelectorAll('[data-in]'),function(b){var p=td[+b.getAttribute('data-in')];if(p&&!p.custNo&&p.kind==='nc'){b.onclick=function(){ncStart({planId:p.id,name:p.name,phone:p.phone||'',addr:p.addr||'',dupOk:1});};}});
+ if(vo&&vo.nc){var c=M.querySelector('.card.vo .mut');if(c)c.textContent='وصلت '+hm(vo.in.at)+' • غير عميل'+(vo.nc.phone?' • '+vo.nc.phone:'');}
+ var F=(d.follow||[]),h='';
+ if(!vo)h+='<div class="card"><label>زيارة لجهة ليست من عملاء الشركة</label><button class="btn s" id="ncb">🏪 زيارة غير عميل</button></div>';
+ h+='<details class="card" id="ncf"'+(F.length?' open':'')+'><summary><b>📌 جهات تحتاج متابعة ('+F.length+')</b></summary>'+(F.length?F.map(function(f,i){return '<div style="margin-top:8px;border-top:1px solid #eee;padding-top:6px"><div class="row"><b>'+E(f.name)+'</b><span class="mut">'+E(f.istLabel||'')+'</span></div><div class="mut">'+E([f.date,f.addr].filter(Boolean).join(' • '))+'</div><div class="row" style="margin-top:4px">'+(f.phone?'<a href="tel:'+E(f.phone)+'">📞 '+E(f.phone)+'</a>':'<span></span>')+(vo?'':'<button class="btn" style="width:auto;padding:8px 14px;margin:0" data-fu="'+i+'">📍 وصلت</button>')+'</div></div>';}).join(''):'<div class="mut">لا توجد جهات بانتظار المتابعة.</div>')+'<div class="mut" style="margin-top:6px">زيارات «مهتم» و«يحتاج متابعة» التي لم تُضف لخطة بعد.</div></details>';
+ M.insertAdjacentHTML('beforeend',h);
+ var nb=document.getElementById('ncb');if(nb)nb.onclick=function(){ncNew({});};
+ [].forEach.call(M.querySelectorAll('[data-fu]'),function(b){b.onclick=function(){var f=F[+b.getAttribute('data-fu')];ncStart({planId:'',name:f.name,phone:f.phone||'',addr:f.addr||'',dupOk:1});};});};
+/* صندوق الإرسال: زيارة غير عميل رُفضت لأن الهاتف مكرر ← زر «تأكيد» */
+var __render0=render;render=function(){__render0.apply(this,arguments);if(S.tab!=='out'||!NCON())return;var M=document.querySelector('main');if(!M)return;var card=M.querySelector('.card');if(!card)return;
+ G('outbox',[]).forEach(function(x){var z=(x.data||{}).__r2||{};if(x.kind!=='visit'||z.kind!=='nc'||z.dupOk||!x.err)return;
+  var b=document.createElement('button');b.className='btn s';b.style.cssText='padding:8px;margin-top:4px';b.textContent='⚠ الهاتف مكرر — عرض وتأكيد: '+(z.name||'');b.onclick=function(){ncDup(z.phone).then(function(H){modal('⚠ تأكيد زيارة «'+(z.name||'')+'»',(H&&H.length?ncHitsHtml(H):'<p class="mut">تعذّر عرض السجلات الآن (لا اتصال).</p>')+'<p>هل هي جهة مختلفة وتريد إرسال الزيارة؟</p>',[['✔ نعم، أرسل الزيارة',function(){var Q=G('outbox',[]);Q.forEach(function(q){if(q.id===x.id){q.data.__r2.dupOk=1;delete q.err;delete q.__rot;}});P('outbox',Q);render();flush();}]]);});};
+  card.insertBefore(b,card.querySelector('#fl'));});};
 setInterval(function(){netBadge();flush();},30000);
 if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js');}catch(e){}}
 if(G('token','')){if(G('bio',null)&&bioCan())bioLock(function(){load();});else load();}else login();
