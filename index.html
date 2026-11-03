@@ -26,7 +26,7 @@ label{display:block;margin:8px 0 3px;font-size:13px;color:var(--m)}input,select,
 <header><b>إيكوواط — المندوب</b><span id="net">متصل</span></header>
 <div id="app"></div>
 <script>
-/* ===== ECOwatt 20261287 — تطبيق المندوب (آخر تعديل 20261325: زيارة غير عميل — البدء بالوقت والموقع، والاسم والهاتف عند الانتهاء) (البند 13 — النسخة الأولى: المندوب فقط) =====
+/* ===== ECOwatt 20261287 — تطبيق المندوب (آخر تعديل 20261326: بدء/إنهاء الرحلة وقراءة العدّاد • 20261325: زيارة غير عميل — البدء بالوقت والموقع، والاسم والهاتف عند الانتهاء) (البند 13 — النسخة الأولى: المندوب فقط) =====
    • الدخول بنفس اسم المستخدم والرقم السري • الصلاحيات من الخادم
    • عملائي وأرصدتهم • طلب بيع • سند قبض (نقد أو شيك مع صورة) • عمولتي
    • يعمل بدون إنترنت: البيانات من آخر تحميل، والطلبات تُحفظ في «صندوق الإرسال» وتُرسل تلقائياً عند رجوع الاتصال بنفس الرقم (لا تكرار)
@@ -371,6 +371,39 @@ var __render0=render;render=function(){__render0.apply(this,arguments);if(S.tab!
  G('outbox',[]).forEach(function(x){var z=(x.data||{}).__r2||{};if(x.kind!=='visit'||z.kind!=='nc'||z.dupOk||!x.err)return;
   var b=document.createElement('button');b.className='btn s';b.style.cssText='padding:8px;margin-top:4px';b.textContent='⚠ الهاتف مكرر — عرض وتأكيد: '+(z.name||'');b.onclick=function(){ncDup(z.phone).then(function(H){modal('⚠ تأكيد زيارة «'+(z.name||'')+'»',(H&&H.length?ncHitsHtml(H):'<p class="mut">تعذّر عرض السجلات الآن (لا اتصال).</p>')+'<p>هل هي جهة مختلفة وتريد إرسال الزيارة؟</p>',[['✔ نعم، أرسل الزيارة',function(){var Q=G('outbox',[]);Q.forEach(function(q){if(q.id===x.id){q.data.__r2.dupOk=1;delete q.err;delete q.__rot;}});P('outbox',Q);render();flush();}]]);});};
   card.insertBefore(b,card.querySelector('#fl'));});};
+/* ===== 20261326 (trip) — 🏁 بدء الرحلة / 🏠 إنهاء الرحلة =====
+   • «🏁 بدء الرحلة» عند الخروج من المقر: يسجّل الوقت والموقع.  • الزيارات خلال الرحلة تُجمع نقاطها (بدء/انتهاء كل زيارة).
+   • «🏠 إنهاء الرحلة» عند الوصول للمقر: يسجّل الوقت والموقع، ويعرض ملخص اليوم (الزيارات، الكيلومترات التقديرية، مدة الرحلة)،
+     ويُرسل للخادم (P14: r2:submit kind=trip ← «رحلة مندوب» بلا موافقة). الحساب الرسمي على الطرق الفعلية يتم في البرنامج عند الإدارة.
+   __REP_FLAT.trip=0 يخفي الميزة. */
+R2K.trip=1;
+function TRON(){return (window.__REP_FLAT||{}).trip!==0&&typeof R2ON==='function'&&R2ON();}
+function tripCur(){var t=G('trip',null);return t&&!t.end?t:null;}
+function tripPt(k,g){var t=G('trip',null);if(!t||t.end||!g||g.lat==null)return;t.pts=(t.pts||[]).concat([{k:k,lat:+g.lat,lng:+g.lng,at:g.at||new Date().toISOString()}]).slice(-300);P('trip',t);}
+function tripKm(t,end){var L=[t.start].concat(t.pts||[]).concat(end?[end]:[]).filter(function(p){return p&&p.lat!=null;}),s=0;for(var i=1;i<L.length;i++)s+=hav(L[i-1],L[i])||0;return Math.round(s*1.3/100)/10;}
+function tripDur(a,b){var m=Math.max(0,Math.round((Date.parse(b)-Date.parse(a))/60000))||0;return Math.floor(m/60)+' س '+(m%60)+' د';}
+var __tq0=queue;queue=function(x){try{if(x&&x.kind==='visit'&&tripCur()){var z=(x.data||{}).__r2||{};if(z.in&&z.in.lat!=null)tripPt('in',z.in);if(z.out&&z.out.lat!=null)tripPt('out',z.out);var t=G('trip',null);t.nv=(t.nv||0)+1;P('trip',t);}}catch(e){}return __tq0.apply(this,arguments);};
+function tripOdoAsk(title,hint,min,cb){var mo=modal(title,'<label>قراءة عدّاد السيارة (كم) *</label><input id="odo" inputmode="numeric" placeholder="مثال: 125430"><p class="mut">'+hint+'</p>',[['✔ متابعة',function(o){var v=String(o.querySelector('#odo').value||'').replace(/[٠-٩]/g,function(c){return String(c.charCodeAt(0)-1632);}).replace(/[^\d.]/g,'');var n=Number(v);
+  if(!v||!isFinite(n)||n<=0){if(!confirm('لم تكتب قراءة العدّاد. المتابعة بدونها؟'))return false;cb(null);return;}
+  if(min!=null&&n<min){alert('قراءة النهاية ('+n+') أقل من قراءة البداية ('+min+') — راجع العدّاد.');return false;}
+  if(min!=null&&n-min>1500&&!confirm('الفرق '+(n-min)+' كم كبير جداً. هل القراءة صحيحة؟'))return false;cb(n);}]]);mo.setAttribute('data-modal','1');var i=mo.querySelector('#odo');if(i)try{i.focus();}catch(e){}}
+function tripStart(){if(tripCur()){alert('الرحلة بدأت مسبقاً.');return;}var last=G('trip',null);if(last&&last.end&&last.date===ymdL()&&!confirm('أنهيت رحلة اليوم مسبقاً. بدء رحلة جديدة؟'))return;
+ tripOdoAsk('🏁 بدء الرحلة','اكتب قراءة العدّاد الآن قبل التحرك. يُسجَّل معها الوقت وموقعك الحالي كبداية لمسار اليوم.',null,function(odo){
+  ncGeo().then(function(g){if(!g&&!confirm('تعذّر تحديد موقعك. بدء الرحلة بدون موقع؟ (يُستعمل موقع المقر المحفوظ عند الإدارة)'))return;
+   P('trip',{id:uidReq(),date:ymdL(),start:g||{at:new Date().toISOString()},odoS:odo,pts:[],nv:0});render();});});}
+function tripEnd(){var t=tripCur();if(!t)return;if(G('vopen',null)){alert('أنهِ الزيارة الجارية أولاً.');return;}
+ tripOdoAsk('🏠 إنهاء الرحلة','اكتب قراءة العدّاد عند الوصول للمقر'+(t.odoS?' (قراءة البداية '+t.odoS+')':'')+'. يُسجَّل معها الوقت وموقعك الحالي كنهاية لمسار اليوم.',t.odoS||null,function(odo){
+ ncGeo().then(function(g){var end=g||{at:new Date().toISOString()},km=tripKm(t,g),nv=t.nv||0,ok=(t.odoS&&odo)?Math.round((odo-t.odoS)*10)/10:null;
+  queue({kind:'trip',id:t.id,data:{__r2:{date:t.date,start:t.start,end:end,km:km,nv:nv,odoS:t.odoS||null,odoE:odo||null}},label:'رحلة '+t.date+' — '+nv+' زيارة — '+(ok!=null?ok+' كم بالعدّاد':km+' كم تقديري')});
+  t.end=end;t.km=km;t.odoE=odo||null;t.odoKm=ok;P('trip',t);render();
+  modal('🏠 انتهت رحلة اليوم','<div class="card"><div class="row"><span>بدء الرحلة</span><b>'+E(hm(t.start.at))+'</b></div><div class="row"><span>نهاية الرحلة</span><b>'+E(hm(end.at))+'</b></div><div class="row"><span>مدة الرحلة</span><b>'+E(tripDur(t.start.at,end.at))+'</b></div><div class="row"><span>عدد الزيارات</span><b>'+nv+'</b></div>'+
+   (ok!=null?'<div class="row"><span>العدّاد</span><b>'+t.odoS+' ← '+odo+'</b></div><div class="row"><span>كيلومترات العدّاد</span><b>'+ok+' كم</b></div>':'')+'<div class="row"><span>الكيلومترات حسب المسار (تقديري)</span><b>'+km+' كم</b></div></div><p class="mut">الحساب الرسمي على الطرق الفعلية ومقارنته بالعدّاد واعتماده يتم عند الإدارة في «المسار والكيلومترات».'+(g?'':' ⚠ لم يُسجَّل موقع النهاية.')+'</p>',[]).setAttribute('data-modal','1');});});}
+var __rt1=r2Route;r2Route=function(M,head){__rt1.apply(this,arguments);if(!TRON())return;var t=G('trip',null),cur=tripCur(),td=t&&t.date===ymdL(),h;
+ if(cur)h='<div class="card" style="border:2px solid #127a3c;background:#eefaf2"><div class="row"><b>🚗 رحلة جارية منذ '+E(hm(cur.start.at))+'</b><span class="mut">زيارات: '+(cur.nv||0)+' • ~'+tripKm(cur,null)+' كم</span></div><button class="btn" id="trE" style="background:#127a3c">🏠 إنهاء الرحلة — عند الوصول للمقر</button></div>';
+ else if(td&&t.end)h='<div class="card"><div class="row"><b>✔ رحلة اليوم انتهت</b><span class="mut">'+E(hm(t.start.at))+' – '+E(hm(t.end.at))+' • '+(t.nv||0)+' زيارة • '+(t.odoKm!=null?t.odoKm+' كم بالعدّاد':(t.km||0)+' كم تقديري')+'</span></div><a href="#" id="trS2" class="mut">بدء رحلة جديدة</a></div>';
+ else h='<div class="card" style="border:2px solid #ff8c00;background:#fff8ee"><button class="btn" id="trS" style="background:#ff8c00">🏁 بدء الرحلة — عند الخروج من المقر</button><div class="mut" style="margin-top:6px">يُسجَّل الوقت والموقع كبداية لمسار اليوم، ثم «🏠 إنهاء الرحلة» عند الوصول للمقر.</div></div>';
+ var f=M.querySelector('.card');if(f)f.insertAdjacentHTML('beforebegin',h);else M.insertAdjacentHTML('beforeend',h);
+ var a=document.getElementById('trS'),b=document.getElementById('trE'),c=document.getElementById('trS2');if(a)a.onclick=tripStart;if(b)b.onclick=tripEnd;if(c)c.onclick=function(e){e.preventDefault();tripStart();};};
 setInterval(function(){netBadge();flush();},30000);
 if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js');}catch(e){}}
 if(G('token','')){if(G('bio',null)&&bioCan())bioLock(function(){load();});else load();}else login();
