@@ -26,7 +26,7 @@ label{display:block;margin:8px 0 3px;font-size:13px;color:var(--m)}input,select,
 <header><b>إيكوواط — المندوب</b><span id="net">متصل</span></header>
 <div id="app"></div>
 <script>
-/* ===== ECOwatt 20261287 — تطبيق المندوب (آخر تعديل 20261326: بدء/إنهاء الرحلة وقراءة العدّاد • 20261325: زيارة غير عميل — البدء بالوقت والموقع، والاسم والهاتف عند الانتهاء) (البند 13 — النسخة الأولى: المندوب فقط) =====
+/* ===== ECOwatt 20261287 — تطبيق المندوب (آخر تعديل 20261328: 📝 ملاحظة المندوب — إغلاق الزيارة بملاحظة عند غياب العميل • 20261326: بدء/إنهاء الرحلة وقراءة العدّاد • 20261325: زيارة غير عميل — البدء بالوقت والموقع، والاسم والهاتف عند الانتهاء) (البند 13 — النسخة الأولى: المندوب فقط) =====
    • الدخول بنفس اسم المستخدم والرقم السري • الصلاحيات من الخادم
    • عملائي وأرصدتهم • طلب بيع • سند قبض (نقد أو شيك مع صورة) • عمولتي
    • يعمل بدون إنترنت: البيانات من آخر تحميل، والطلبات تُحفظ في «صندوق الإرسال» وتُرسل تلقائياً عند رجوع الاتصال بنفس الرقم (لا تكرار)
@@ -371,6 +371,29 @@ var __render0=render;render=function(){__render0.apply(this,arguments);if(S.tab!
  G('outbox',[]).forEach(function(x){var z=(x.data||{}).__r2||{};if(x.kind!=='visit'||z.kind!=='nc'||z.dupOk||!x.err)return;
   var b=document.createElement('button');b.className='btn s';b.style.cssText='padding:8px;margin-top:4px';b.textContent='⚠ الهاتف مكرر — عرض وتأكيد: '+(z.name||'');b.onclick=function(){ncDup(z.phone).then(function(H){modal('⚠ تأكيد زيارة «'+(z.name||'')+'»',(H&&H.length?ncHitsHtml(H):'<p class="mut">تعذّر عرض السجلات الآن (لا اتصال).</p>')+'<p>هل هي جهة مختلفة وتريد إرسال الزيارة؟</p>',[['✔ نعم، أرسل الزيارة',function(){var Q=G('outbox',[]);Q.forEach(function(q){if(q.id===x.id){q.data.__r2.dupOk=1;delete q.err;delete q.__rot;}});P('outbox',Q);render();flush();}]]);});};
   card.insertBefore(b,card.querySelector('#fl'));});};
+/* ===== 20261328 (vnote) — 📝 ملاحظة المندوب: إغلاق الزيارة بملاحظة فقط عندما لا يكون العميل موجوداً
+   • في نافذة «غادرت / إنهاء الزيارة» (لعميل الشركة ولغير عميل الشركة) زر «📝 العميل غير موجود — ملاحظة المندوب».
+   • يكتب المندوب الملاحظة (إلزامية) ← «إغلاق الزيارة بالملاحظة»: تُرسل الزيارة بوقت ومكان البدء والانتهاء، النتيجة «لا شيء»، والملاحظة تبدأ بـ «📝 ملاحظة المندوب — العميل غير موجود».
+   • عند وجود العميل تبقى نافذة الزيارة كما هي تماماً. __REP_FLAT.vnote=0 يخفي الزر. لا يحتاج أي تعديل على الخادم (P14 وP21 يقبلان الملاحظة حتى 500 حرف). */
+var VN_TAG='📝 ملاحظة المندوب — العميل غير موجود';
+function vnOn(){return (window.__REP_FLAT||{}).vnote!==0;}
+function vnGeo(){try{if(typeof ncGeo==='function')return ncGeo();}catch(e){}return Promise.resolve(null);}
+function vnOpen(v,parent){var isNc=!!v.nc,ask=isNc&&!v.name,gp=vnGeo();
+ var mo=modal('📝 ملاحظة المندوب — '+(v.name||'جهة غير عميل'),'<div class="mut">العميل غير موجود؟ اكتب ملاحظتك وتُغلق الزيارة عليها دون باقي التفاصيل. يُسجَّل وقت الانتهاء وموقعك تلقائياً.</div>'+
+  (ask?'<label>اسم الجهة / المحل *</label><input id="wn"><label>هاتف (اختياري)</label><input id="wp" inputmode="tel">':'')+
+  '<label>ملاحظة المندوب *</label><textarea id="wt" rows="4" maxlength="440" placeholder="مثال: المحل مغلق — صاحب المحل غير موجود — سأعود يوم الخميس"></textarea><div class="mut" id="wm"></div>',
+  [['✔ إغلاق الزيارة بالملاحظة',function(o){if(o.__busy)return false;var nt=o.querySelector('#wt').value.trim();if(nt.length<3){alert('اكتب ملاحظة المندوب');return false;}
+    var nm=v.name||'',ph=(v.nc&&v.nc.phone)||'';if(ask){nm=o.querySelector('#wn').value.trim();ph=o.querySelector('#wp').value.trim();if(!nm){alert('اسم الجهة / المحل مطلوب');return false;}}
+    o.__busy=1;var wm=o.querySelector('#wm');if(wm)wm.textContent='⏳ جارٍ تسجيل موقع الانتهاء…';
+    gp.then(function(g){var out={at:new Date().toISOString()};if(g){out.lat=g.lat;out.lng=g.lng;out.acc=g.acc;}var note=VN_TAG+': '+nt;
+     var z=isNc?{kind:'nc',name:nm,phone:ph,addr:(v.nc&&v.nc.addr)||'',ist:'',result:'لا شيء',note:note,in:v.in,out:out,planId:v.planId||'',dupOk:(v.nc&&v.nc.dupOk)?1:0,noteOnly:1}
+              :{custNo:v.custNo,planId:v.planId,in:v.in,out:out,result:'لا شيء',note:note,noteOnly:1};
+     queue({kind:'visit',id:v.id,data:{__r2:z},gps:v.in&&v.in.lat!=null?{lat:v.in.lat,lng:v.in.lng,acc:v.in.acc}:null,label:'زيارة — '+(nm||v.name||'')+' — 📝 ملاحظة المندوب'});
+     P('vopen',null);try{o.remove();}catch(e){}try{if(parent)parent.remove();}catch(e){}render();});return false;}]]);
+ mo.setAttribute('data-modal','1');return mo;}
+var __leaveVn=leave;leave=function(){var r=__leaveVn.apply(this,arguments);try{if(!vnOn())return r;var v=G('vopen',null);if(!v)return r;var L=document.querySelectorAll('[data-modal]'),m=L[L.length-1];if(!m||m.querySelector('[data-vn]'))return r;
+  var box=m.firstElementChild,h=box&&box.querySelector('h3');if(!h)return r;var b=document.createElement('button');b.className='btn s';b.setAttribute('data-vn','1');b.style.cssText='margin:0 0 8px;border:2px dashed #ff8c00';b.textContent='📝 العميل غير موجود — ملاحظة المندوب';
+  b.onclick=function(){vnOpen(v,m);};h.parentNode.insertBefore(b,h.nextSibling);}catch(e){}return r;};
 /* ===== 20261326 (trip) — 🏁 بدء الرحلة / 🏠 إنهاء الرحلة =====
    • «🏁 بدء الرحلة» عند الخروج من المقر: يسجّل الوقت والموقع.  • الزيارات خلال الرحلة تُجمع نقاطها (بدء/انتهاء كل زيارة).
    • «🏠 إنهاء الرحلة» عند الوصول للمقر: يسجّل الوقت والموقع، ويعرض ملخص اليوم (الزيارات، الكيلومترات التقديرية، مدة الرحلة)،
