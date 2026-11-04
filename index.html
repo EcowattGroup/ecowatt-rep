@@ -427,6 +427,28 @@ var __rt1=r2Route;r2Route=function(M,head){__rt1.apply(this,arguments);if(!TRON(
  else h='<div class="card" style="border:2px solid #ff8c00;background:#fff8ee"><button class="btn" id="trS" style="background:#ff8c00">🏁 بدء الرحلة — عند الخروج من المقر</button><div class="mut" style="margin-top:6px">يُسجَّل الوقت والموقع كبداية لمسار اليوم، ثم «🏠 إنهاء الرحلة» عند الوصول للمقر.</div></div>';
  var f=M.querySelector('.card');if(f)f.insertAdjacentHTML('beforebegin',h);else M.insertAdjacentHTML('beforeend',h);
  var a=document.getElementById('trS'),b=document.getElementById('trE'),c=document.getElementById('trS2');if(a)a.onclick=tripStart;if(b)b.onclick=tripEnd;if(c)c.onclick=function(e){e.preventDefault();tripStart();};};
+/* ===== 20261349 (nd24) — 🚫 «لا يرغب التعامل» + 📅 الموعد المقترح للزيارة القادمة (من الخادم P24 عبر r2:boot: nd و sched)
+   (1) عند «وصلت» لعميل أو غير عميل مسجّل «لا يرغب التعامل مع الشركة / غير مهتم»: تنبيه بالسبب، والزيارة تُسجَّل فقط إذا أكّد المندوب.
+       عرض السعر وطلب البيع له لا يُرسلان (يُمنعان هنا وعلى الخادم).
+   (2) بعد إرسال زيارة غير مخطط لها: الموعد المقترح للزيارة القادمة = بعد 30 يوماً، متخطياً العطلة الأسبوعية للمندوب والعطل الرسمية لفرعه وإجازاته المعتمدة،
+       ووقت الدوام من كرت الموظف (الافتراضي الجمعة عطلة و09:00–17:00). بدون P24 على الخادم: لا تنبيه ويُحسب الموعد بالافتراضي. ===== */
+function nd24Ph(s){var t=String(s==null?'':s).replace(/[٠-٩]/g,function(c){return String(c.charCodeAt(0)-1632);}).replace(/\D/g,'');return t.length>=7?t.slice(-9):'';}
+function nd24Nz(s){return String(s==null?'':s).replace(/[ً-ٟـ]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/\s+/g,' ').trim().toLowerCase();}
+function nd24Hit(phones,names){var L=R2D().nd||[];if(!L.length)return null;var ps=(phones||[]).map(nd24Ph).filter(Boolean),ns=(names||[]).map(nd24Nz).filter(function(x){return x.length>=3;});
+ return L.filter(function(l){return ps.some(function(p){return (l.ph||[]).indexOf(p)>-1;})||ns.some(function(n){return (l.n||[]).indexOf(n)>-1;});})[0]||null;}
+function nd24Msg(h){return '🚫 «'+(h.label||'هذا العميل')+'» مسجّل: لا يرغب التعامل مع الشركة / غير مهتم'+(h.why?('\nالسبب: '+h.why):'');}
+var __arr24=arrive;arrive=function(o){try{var c=o&&o.custNo?custOf(o.custNo):null,h=nd24Hit([c&&c.phone],[c&&c.name,o&&o.name]);if(h&&!confirm(nd24Msg(h)+'\n\nلا يمكن إرسال عرض سعر أو طلب بيع له. تسجيل الزيارة فقط؟'))return;}catch(e){}return __arr24.apply(this,arguments);};
+var __nc24=ncStart;ncStart=function(o){try{var h=nd24Hit([o&&o.phone],[o&&o.name]);if(h&&!confirm(nd24Msg(h)+'\n\nتسجيل الزيارة فقط؟'))return;}catch(e){}return __nc24.apply(this,arguments);};
+function sug24(){var sc=R2D().sched||{},wd=Array.isArray(sc.wd)&&sc.wd.length?sc.wd.map(Number):[0,1,2,3,4,6],H=[].concat(sc.hol||[],sc.leave||[]);
+ var x=new Date();x.setDate(x.getDate()+30);for(var i=0;i<60;i++){var k=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');if(wd.indexOf(x.getDay())>-1&&H.indexOf(k)<0)break;x.setDate(x.getDate()+1);}
+ var k2=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');return {date:k2,day:['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][x.getDay()],from:sc.from||'09:00',to:sc.to||'17:00',src:R2D().sched?'جدولك من البرنامج':'الافتراضي'};}
+function toast24(h){var t=document.getElementById('sug24');if(t)t.remove();t=document.createElement('div');t.id='sug24';t.style.cssText='position:fixed;left:10px;right:10px;bottom:72px;z-index:60;background:#ecfdf3;border:2px solid #067647;color:#054f31;border-radius:12px;padding:10px 12px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.18)';
+ t.innerHTML=h+' <button type="button" style="float:left;border:0;background:transparent;font-size:18px">✕</button>';t.querySelector('button').onclick=function(){t.remove();};document.body.appendChild(t);setTimeout(function(){try{t.remove();}catch(e){}},15000);}
+var __q24=queue;queue=function(x){try{if(x&&(x.kind==='quote'||x.kind==='so')){var d=x.data||{},z=d.__r2||{},no=String(z.custNo||d['رقم حساب العميل']||''),c=custOf(no),h=nd24Hit([c&&c.phone,d['الهاتف']],[c&&c.name,d['العميل']]);
+   if(h){alert(nd24Msg(h)+'\n\n⛔ لم يُرسل '+(x.kind==='quote'?'عرض السعر':'طلب البيع')+'. يُعاد تفعيل العميل من البرنامج (العملاء المحتملون) بواسطة مستخدم مخوّل.');return;}}}catch(e){}
+ var r=__q24.apply(this,arguments);
+ try{if(x&&x.kind==='visit'&&!(((x.data||{}).__r2||{}).planId)){var s=sug24();toast24('📅 الموعد المقترح للزيارة القادمة: '+E(s.day)+' '+E(s.date.split('-').reverse().join('/'))+' • '+E(s.from)+'–'+E(s.to)+'<div style="font-weight:400;font-size:12px">بعد 30 يوماً، متخطياً العطل والإجازات ('+E(s.src)+'). يُثبَّت الموعد من البرنامج («⏰ المتابعات»).</div>');}}catch(e){}
+ return r;};
 setInterval(function(){netBadge();flush();},30000);
 if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js');}catch(e){}}
 if(G('token','')){if(G('bio',null)&&bioCan())bioLock(function(){load();});else load();}else login();
