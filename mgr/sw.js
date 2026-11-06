@@ -1,5 +1,5 @@
 /* إيكوواط — تطبيق المدير: الواجهة تعمل من الذاكرة، والبيانات من الخادم (آخر نسخة محفوظة على الجوال) */
-var C='eco-mgr-v20261363';
+var C='eco-mgr-v20261368';
 self.addEventListener('install',function(e){e.waitUntil(caches.open(C).then(function(c){return c.addAll(['./','./index.html','./manifest.webmanifest','./icon.svg','./icon.png']);}));self.skipWaiting();});
 self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(x){return x!==C&&/^eco-mgr-/.test(x);}).map(function(x){return caches.delete(x);}));}));self.clients.claim();});
 self.addEventListener('fetch',function(e){if(e.request.method!=='GET'||new URL(e.request.url).origin!==location.origin)return;if(!/\/mgr\//.test(new URL(e.request.url).pathname))return;
