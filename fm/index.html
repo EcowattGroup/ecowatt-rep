@@ -412,5 +412,176 @@ if('serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js');}
 netBadge();
 (function start(){if(!G('token','')){login();return;}var go=function(){idbGet('full').then(function(c){if(c&&c.data){S.full=c.data;S.at=c.at;S.savedAt=c.savedAt;render();}loadAll(true);});};if(G('bio',null)&&bioCan())bioLock(go);else go();})();
 </script>
+
+<script id="eco-mtools-20261368">
+/* ===== ECOwatt 20261368 (mtools) — المساعد والآلة الحاسبة في تطبيقات الجوال (المندوب • المدير • المدير المالي والإداري)
+   • 🧮 حاسبة عائمة (أساسي ومتقدم، ذاكرة، سجل، نسخ، أوامر صوتية «1500 ضرب 16 بالمية»).
+   • 🤖 مساعد بالنص والصوت (يتكلم العربية): الحساب بالكلام، معاني المصطلحات، وبيانات التطبيق نفسه فقط حسب حساب المستخدم:
+     المدير/نائل: أرقام المستندات والقيود والفواتير والطلبات، رصيد صنف، رصيد حساب/عميل، مبيعات الفترة، الطلبات بانتظار قرارك.
+     المندوب: عملاؤه (الرقم، الهاتف، المنطقة).
+     لا ينشئ ولا يعدّل ولا يحذف ولا يعتمد شيئاً. إن كانت خدمة الذكاء الاصطناعي مفعّلة لحسابك على الخادم تُسأل عن غير ذلك (الشرح فقط، بلا بيانات).
+   • لا يستعمل مفاتيح التخزين الخاصة بالتطبيق: كل ما يحفظه بالبادئة ecomt_. ===== */
+(function(){'use strict';var W=window;if(W.__ecoMT)return;W.__ecoMT=1;
+function E(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function lg(){try{var a=[].slice.call(arguments);console.warn.apply(console,['[mtools]'].concat(a));}catch(e){}}
+function lsG(k,d){try{var v=JSON.parse(localStorage.getItem('ecomt_'+k)||'null');return v==null?d:v;}catch(e){return d;}}
+function lsS(k,v){try{localStorage.setItem('ecomt_'+k,JSON.stringify(v));}catch(e){}}
+function n2(v){var x=Number(v);return isFinite(x)?x:0;}
+function m2(v){return n2(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function dmy(s){s=String(s||'').slice(0,10);var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s);return m?m[3]+'/'+m[2]+'/'+m[1]:s;}
+function nz(s){return String(s||'').toLowerCase().replace(/[ً-ْـ]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/[^؀-ۿa-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();}
+function NK(s){return String(s||'').toUpperCase().replace(/[٠-٩]/g,function(d){return d.charCodeAt(0)-1632;}).replace(/[\s_]+/g,'');}
+var STW={};nz('كيف طريقه شو ما هو هي في من على الى عن اريد بدي ممكن لو سمحت هل انا لي و او رصيد كم').split(' ').forEach(function(w){STW[w]=1;});
+function toks(q){return nz(q).split(' ').map(function(w){return w.length>3&&w.indexOf('ال')===0?w.slice(2):w;}).filter(function(w){return w&&!STW[w]&&w.length>1;});}
+function has(text,t){var n=' '+nz(text).split(' ').map(function(w){return w.length>3&&w.indexOf('ال')===0?w.slice(2):w;}).join(' ')+' ';return n.indexOf(' '+t)>-1;}
+/* ---------- نوع التطبيق وبياناته ---------- */
+function app(){try{if(typeof S!=='undefined'&&S){if(S.boot!==undefined&&typeof R2D==='function')return 'rep';if(typeof D==='function')return 'mgr';}}catch(e){}return '';}
+function logged(){try{if(typeof S==='undefined'||!S)return false;var a=app();if(a==='mgr')return !!S.full;if(a==='rep')return !!S.boot;}catch(e){}return false;}
+function mdata(){try{return app()==='mgr'?(D()||{}):{};}catch(e){return {};}}
+/* ---------- الحاسبة: محلل آمن بلا eval ---------- */
+var CAL={mem:0,hist:lsG('chist',[]),deg:true};
+function calcEval(src){var s=String(src||'').replace(/[×xX]/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/π/g,'pi').replace(/√/g,'sqrt').replace(/,/g,'').replace(/[٠-٩]/g,function(d){return d.charCodeAt(0)-1632;}).replace(/٫/g,'.');
+ var i=0;function ws(){while(s[i]===' ')i++;}
+ function num(){ws();var m=/^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i.exec(s.slice(i));if(!m)return null;i+=m[0].length;return parseFloat(m[0]);}
+ function fact(n){if(n<0||n!==Math.floor(n)||n>170)throw new Error('مضروب غير صالح');var r=1;for(var k=2;k<=n;k++)r*=k;return r;}
+ var FN={sin:function(x){return Math.sin(CAL.deg?x*Math.PI/180:x);},cos:function(x){return Math.cos(CAL.deg?x*Math.PI/180:x);},tan:function(x){return Math.tan(CAL.deg?x*Math.PI/180:x);},log:function(x){return Math.log10(x);},ln:function(x){return Math.log(x);},sqrt:function(x){if(x<0)throw new Error('جذر لعدد سالب');return Math.sqrt(x);},abs:Math.abs};
+ function primary(){ws();var c=s[i];if(c==='('){i++;var v=expr();ws();if(s[i]!==')')throw new Error('قوس ناقص');i++;return {v:v.v};}
+  var m=/^[a-z]+/i.exec(s.slice(i));if(m){var w=m[0].toLowerCase();i+=m[0].length;if(w==='pi')return {v:Math.PI};if(w==='e')return {v:Math.E};if(FN[w]){var a=postfix();return {v:FN[w](a.v)};}throw new Error('دالة غير معروفة: '+w);}
+  var n=num();if(n==null)throw new Error('تعبير غير مكتمل');return {v:n};}
+ function postfix(){var p=primary(),pc=false;for(;;){ws();if(s[i]==='%'){i++;p={v:p.v/100};pc=true;}else if(s[i]==='!'){i++;p={v:fact(p.v)};}else break;}p.pc=pc;return p;}
+ function unary(){ws();if(s[i]==='-'){i++;var u=unary();return {v:-u.v,pc:u.pc};}if(s[i]==='+'){i++;return unary();}return power();}
+ function power(){var b=postfix();ws();if(s[i]==='^'){i++;var e=unary();return {v:Math.pow(b.v,e.v)};}return b;}
+ function term(){var a=unary();for(;;){ws();var c=s[i];if(c==='*'||c==='/'){i++;var b=unary();if(c==='/'&&b.v===0)throw new Error('القسمة على صفر');a={v:c==='*'?a.v*b.v:a.v/b.v};}else break;}return a;}
+ function expr(){var a=term();for(;;){ws();var c=s[i];if(c==='+'||c==='-'){i++;var b=term(),bv=b.pc?a.v*b.v:b.v;a={v:c==='+'?a.v+bv:a.v-bv};}else break;}return a;}
+ if(!s.trim())return null;var r=expr();ws();if(i<s.length)throw new Error('رمز غير متوقع: '+s[i]);if(!isFinite(r.v))throw new Error('نتيجة غير محددة');return r.v;}
+function fmtN(v){if(v==null||!isFinite(v))return '';var a=Math.abs(v);if(a!==0&&(a>=1e15||a<1e-9))return v.toExponential(8).replace(/\.?0+e/,'e');return String(Math.round(v*1e10)/1e10);}
+function mathOf(q){var s=String(q||'').replace(/[٠-٩]/g,function(d){return d.charCodeAt(0)-1632;}).replace(/٫/g,'.').replace(/،/g,',');
+ var has0=/^\s*(احسب|احسبلي|احسب لي|كم يساوي|كم بساوي|كم حاصل|كم ناتج|ناتج|حاصل)(?=\s|$)/.test(s)||/جذر/.test(s);
+ s=s.replace(/^\s*(احسب لي|احسبلي|احسب|كم يساوي|كم بساوي|كم حاصل|كم ناتج|ناتج|حاصل)\s*/,'');
+ s=s.replace(/(\d+(?:\.\d+)?)\s*(?:بالمي[ةه]|بالمئ[ةه]|بالمائ[ةه]|%)\s*(?:من)\s*(\d+(?:\.\d+)?)/g,'($2*$1/100)');
+ [[/زائد|زايد|جمع|\+/g,'+'],[/ناقص|نقص|طرح|سالب/g,'-'],[/مضروب(?:ة|ه)?\s*في|ضربه|ضرب|×|(?<=\d\s*)x(?=\s*\d)|(?<=\d\s*)في(?=\s*\d)/g,'*'],[/مقسوم(?:ة|ه)?\s*على|قسمة|قسمه|تقسيم|(?<=\d\s*)على(?=\s*\d)|÷/g,'/'],[/بالمي[ةه]|بالمئ[ةه]|بالمائ[ةه]/g,'%'],[/أس|اس|قو[ةه]/g,'^'],[/الجذر(?: التربيعي)?(?: ل)?|جذر/g,'sqrt '],[/فاصل[ةه]/g,'.'],[/يساوي|=|\?|؟/g,'']].forEach(function(r){s=s.replace(r[0],r[1]);});
+ s=s.replace(/sqrt\s+(\d+(?:\.\d+)?)/g,'sqrt($1)').replace(/\s+/g,' ').trim();
+ if(!/\d/.test(s)||!/^[\d\s.,+\-*/%^()sqrtpie!]+$/i.test(s))return null;if(!has0&&!/[+\-*/%^]/.test(s.replace(/^-/,'')))return null;
+ try{var v=calcEval(s);if(v==null)return null;return {ex:s,v:v};}catch(e){return has0?{ex:s,err:e.message}:null;}}
+W.__ecoMTcalc=calcEval;W.__ecoMTmath=mathOf;
+/* ---------- صوت عربي ---------- */
+var VOX={v:null,warn:false},TTS=lsG('tts',true);
+function arVoice(){try{var L=(W.speechSynthesis&&speechSynthesis.getVoices())||[];var A=L.filter(function(x){return /^ar/i.test(x.lang)||/arab|عرب|Hoda|Naayf|Hamed|Zariyah|Salma/i.test(x.name);});A.sort(function(a,b){var s=function(v){return (/ar-(JO|PS|SA)/i.test(v.lang)?3:0)+(/Google|Microsoft/i.test(v.name)?1:0);};return s(b)-s(a);});VOX.v=A[0]||null;}catch(e){}return VOX.v;}
+try{if(W.speechSynthesis){arVoice();speechSynthesis.onvoiceschanged=arVoice;}}catch(e){}
+function spoken(t){return String(t||'').replace(/<[^>]+>/g,' ').replace(/[📍📘🤖↗✔⚠⛔💡🧾🗓👁🖨•›📦💳🛒📒📄📨🧮]/g,' ').replace(/\s+/g,' ').trim().slice(0,600);}
+function say(t,force){try{if(!(TTS||force)||!W.speechSynthesis)return;var v=VOX.v||arVoice(),u=new SpeechSynthesisUtterance(spoken(t));u.lang=v?v.lang:'ar-SA';if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u);
+ if(!v&&!VOX.warn){VOX.warn=1;msg('ma','🔈 لا يوجد صوت عربي مثبت على هذا الجوال. للتثبيت: الإعدادات ← تحويل النص إلى كلام ← محرك Google ← العربية.');}}catch(e){lg('tts',e);}}
+var SR=W.SpeechRecognition||W.webkitSpeechRecognition;
+function listen(btn,cb,st){if(!SR){st('التعرف على الصوت غير مدعوم في هذا المتصفح');return;}try{var r=new SR();r.lang='ar-JO';r.interimResults=false;btn.classList.add('rec');st('🎤 أستمع… تحدّث الآن');
+ r.onresult=function(ev){var t=ev.results&&ev.results[0]&&ev.results[0][0]&&ev.results[0][0].transcript;if(t)cb(t);};r.onerror=function(ev){st('تعذّر الصوت: '+({'not-allowed':'لم يُسمح باستخدام الميكروفون','no-speech':'لم يُسمع كلام','network':'يحتاج إنترنت'}[ev.error]||ev.error));};
+ r.onend=function(){btn.classList.remove('rec');setTimeout(function(){st('');},2500);};r.start();}catch(e){btn.classList.remove('rec');st('تعذّر تشغيل الميكروفون');}}
+/* ---------- الأنماط والنوافذ ---------- */
+var CSS='#mtDock{position:fixed;right:10px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:2147483646;display:flex;flex-direction:column;gap:8px}'+
+'#mtDock button{width:48px;height:48px;border-radius:50%;border:0;background:#1e5a6b;color:#fff;font-size:22px;box-shadow:0 3px 10px rgba(22,58,64,.35);display:flex;align-items:center;justify-content:center;padding:0}#mtDock button.on{background:#f7941d}'+
+'.mtw{position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:2147483647;background:#fff;border:1px solid #9fb3bd;box-shadow:0 10px 32px rgba(22,58,64,.3);display:flex;flex-direction:column;max-height:78vh;direction:rtl;border-radius:14px;overflow:hidden;font:15px/1.6 system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;color:#111827}'+
+'.mtw .mth{background:linear-gradient(#2a6f82,#1e5a6b);color:#fff;padding:9px 12px;display:flex;align-items:center;gap:8px;border-bottom:3px solid #f7941d}.mtw .mth b{flex:1}.mtw .mth button{background:transparent;border:0;color:#fff;font-size:18px;padding:0 6px}'+
+'.mtw .mtb{overflow:auto;flex:1;min-height:0}.mtw button.k{border:1px solid #b9c9d1;background:#fff;color:#163a40;padding:7px 10px;font:inherit;border-radius:8px}.mtw button.k.m{background:#1e5a6b;color:#fff;border-color:#1e5a6b}.mtw button.rec{background:#b42318!important;color:#fff!important}'+
+'#mtCalc .cd{padding:10px;background:#f4f8f9}#mtCalc .ce{font-size:12px;color:#5b6b75;direction:ltr;text-align:left;min-height:18px}#mtCalc input{width:100%;box-sizing:border-box;font-size:26px;padding:8px;direction:ltr;text-align:left;border:1px solid #b9c9d1;border-radius:8px}'+
+'#mtCalc .cg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:10px}#mtCalc .cg button{padding:12px 0;font-size:17px;border:1px solid #c9d6dc;background:#fff;border-radius:10px;direction:ltr}#mtCalc .cg button.n{font-weight:700;background:#fbfdfe}#mtCalc .cg button.op{background:#e7f0f3}#mtCalc .cg button.eq{background:#f7941d;color:#fff;border-color:#f7941d}'+
+'#mtCalc .cf,#mtAst .cf{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 10px;border-top:1px solid #d5e0e5;background:#eef3f5}#mtCalc .ch{max-height:70px;overflow:auto;font-size:12px;direction:ltr;padding:0 10px 6px}#mtCalc .ch div{border-bottom:1px dotted #d5e0e5;text-align:left}'+
+'#mtAst .am{padding:10px;display:flex;flex-direction:column;gap:8px}#mtAst .mq{align-self:flex-start;background:#1e5a6b;color:#fff;padding:8px 11px;border-radius:12px;max-width:90%}#mtAst .ma{align-self:flex-end;background:#f1f5f7;border:1px solid #d5e0e5;padding:8px 11px;border-radius:12px;max-width:94%;font-size:14px}'+
+'#mtAst .ma .tag{font-size:11px;color:#6b7a84;margin-top:4px}#mtAst .ai{display:flex;gap:6px;padding:8px;border-top:1px solid #d5e0e5}#mtAst .ai input{flex:1;min-width:0;border:1px solid #b9c9d1;border-radius:10px;padding:9px;font:inherit}#mtAst .ai button{border:1px solid #b9c9d1;background:#fff;border-radius:10px;padding:0 11px;font-size:18px}#mtAst .st{font-size:11.5px;color:#6b7a84;padding:0 10px 6px}'+
+'#mtAst table{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}#mtAst td,#mtAst th{border:1px solid #d5e0e5;padding:3px 5px}';
+function css(){if(document.getElementById('mtCss'))return;var s=document.createElement('style');s.id='mtCss';s.textContent=CSS;document.head.appendChild(s);}
+function win(id,title){css();var w=document.getElementById(id);if(w){w.style.display='flex';return w;}w=document.createElement('div');w.id=id;w.className='mtw';w.innerHTML='<div class="mth"><b>'+title+'</b><button type="button" data-cl aria-label="إغلاق">✕</button></div><div class="mtb"></div>';document.body.appendChild(w);
+ w.querySelector('[data-cl]').onclick=function(){w.style.display='none';dockSt();};return w;}
+function shown(id){var w=document.getElementById(id);return !!(w&&w.style.display!=='none');}
+/* ---------- الحاسبة ---------- */
+function calcOpen(){var o=document.getElementById('mtAst');if(o)o.style.display='none';var w=win('mtCalc','🧮 الآلة الحاسبة'),b=w.querySelector('.mtb');
+ if(!b.firstChild){var K=[['C','op','c'],['⌫','op','bk'],['(','op','('],[')','op',')'],['÷','op','/'],['7','n','7'],['8','n','8'],['9','n','9'],['%','op','%'],['×','op','*'],['4','n','4'],['5','n','5'],['6','n','6'],['√','op','sqrt('],['−','op','-'],['1','n','1'],['2','n','2'],['3','n','3'],['xʸ','op','^'],['+','op','+'],['M+','op','m+'],['0','n','0'],['.','n','.'],['MR','op','mr'],['=','eq','=']];
+  b.innerHTML='<div class="cd"><div class="ce" data-ce>&nbsp;</div><input data-cv inputmode="decimal" autocomplete="off" placeholder="0"></div><div class="cg">'+K.map(function(k){return '<button type="button" class="'+k[1]+'" data-ck="'+E(k[2])+'">'+E(k[0])+'</button>';}).join('')+'</div><div class="ch" data-ch></div>';
+  var f=document.createElement('div');f.className='cf';f.innerHTML='<button type="button" class="k m" data-cmic>🎤 قل العملية</button><button type="button" class="k" data-ccp>📋 نسخ</button><span data-cm style="font-size:12px;color:#5b6b75"></span>';w.appendChild(f);
+  var inp=b.querySelector('[data-cv]'),ce=b.querySelector('[data-ce]'),cm=f.querySelector('[data-cm]');
+  function st(t){cm.textContent=t||(CAL.mem?'M = '+fmtN(CAL.mem):'');}
+  function live(){try{var v=calcEval(inp.value);ce.textContent=v==null?' ':'= '+fmtN(v);}catch(e){ce.textContent=' ';}}
+  function hist(){b.querySelector('[data-ch]').innerHTML=CAL.hist.map(function(h){return '<div>'+E(h)+'</div>';}).join('');}
+  function eq(){var ex=inp.value;try{var v=calcEval(ex);if(v==null)return;var r=fmtN(v);CAL.hist.unshift(ex+' = '+r);CAL.hist=CAL.hist.slice(0,10);lsS('chist',CAL.hist);ce.textContent=ex+' =';inp.value=r;hist();return r;}catch(e){ce.textContent='⚠ '+e.message;}}
+  b.addEventListener('click',function(e){var t=e.target.closest('[data-ck]');if(!t)return;var k=t.getAttribute('data-ck');
+   if(k==='c'){inp.value='';live();return;}if(k==='bk'){inp.value=inp.value.slice(0,-1);live();return;}if(k==='='){eq();return;}
+   if(k==='m+'){try{CAL.mem+=calcEval(inp.value)||0;st();}catch(x){}return;}if(k==='mr'){inp.value+=fmtN(CAL.mem);live();return;}inp.value+=k;live();});
+  inp.addEventListener('input',live);inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();eq();}});
+  f.querySelector('[data-ccp]').onclick=function(){try{navigator.clipboard.writeText(inp.value).then(function(){st('نُسخ ✔');});}catch(e){st('تعذّر النسخ');}};
+  var mb=f.querySelector('[data-cmic]');if(!SR){mb.disabled=true;mb.style.opacity='.5';}
+  mb.onclick=function(){listen(mb,function(t){var m=mathOf('احسب '+t);if(!m||m.err){st('لم أفهم: '+t);return;}inp.value=m.ex;var r=eq();if(r!=null)say('الناتج '+r,true);},st);};
+  hist();st();W.__ecoMTcalcEq=function(x){inp.value=x;return eq();};}
+ dockSt();}
+/* ---------- بيانات المدير ---------- */
+function docTok(q){var M=String(q||'').replace(/[٠-٩]/g,function(d){return d.charCodeAt(0)-1632;}).match(/[A-Za-z]{1,6}(?:[-\s]?\d+)+(?:-[A-Za-z0-9]+)*|REQ-[A-Za-z0-9]+|\b\d{3,}\b/g);return M||[];}
+function numMatch(c,q){var a=NK(c),b=NK(q);if(!a||!b)return 0;if(a===b)return 3;if(/^\d+$/.test(b)){var t=a.match(/(\d+)$/);if(t&&n2(t[1])===n2(b))return 2;}if(a.length>4&&b.length>=4&&a.slice(-b.length)===b)return 1;return 0;}
+var KL={so:'طلب مبيعات',po:'أمر شراء',preq:'طلب شراء',proj:'طلب تركيب موقع سخان',mr:'طلب صيانة',grn:'استلام بضاعة',docs:'مستند محاسبي'};
+function itemName(d,id){var it=(d.items||[]).filter(function(i){return i.id===id;})[0];return it?((it.code?it.code+' — ':'')+(it.name||'')):String(id||'');}
+function mgrDocs(q){var d=mdata(),out=[];docTok(q).forEach(function(tk){
+ (d.journals||[]).forEach(function(j){var s=Math.max(numMatch(j.number,tk),numMatch(j.sourceNumber,tk));if(s)out.push({s:s,k:'j',o:j});});
+ (d.invoices||[]).forEach(function(v){var s=numMatch(v.number,tk);if(s)out.push({s:s,k:'inv',o:v});});
+ var X=d.x85||{};Object.keys(X).forEach(function(sec){if(Array.isArray(X[sec]))X[sec].forEach(function(o){if(o&&o.no){var s=numMatch(o.no,tk);if(s)out.push({s:s,k:'x',sec:sec,o:o});}});});
+ ((typeof S!=='undefined'&&S.reqs)||[]).forEach(function(r){var s=Math.max(numMatch(r.id,tk),numMatch(r.formNo,tk));if(s)out.push({s:s,k:'req',o:r});});});
+ if(!out.length)return null;var b=Math.max.apply(null,out.map(function(x){return x.s;}));out=out.filter(function(x){return x.s===b;}).slice(0,5);
+ return out.map(function(x){var o=x.o;
+  if(x.k==='j')return '<b>📒 قيد '+E(o.sourceType||'')+' '+E(o.number||'')+'</b> — '+E(dmy(o.date))+' — '+(o.status==='ملغى'?'⛔ ملغى':'✔ مرحّل')+'<br>المبلغ: <b>'+m2(o.totalDebit)+' ₪</b><table><tr><th>الحساب</th><th>مدين</th><th>دائن</th></tr>'+(o.lines||[]).slice(0,8).map(function(l){return '<tr><td>'+E(l.account)+'</td><td>'+(n2(l.debit)?m2(l.debit):'')+'</td><td>'+(n2(l.credit)?m2(l.credit):'')+'</td></tr>';}).join('')+'</table>';
+  if(x.k==='inv')return '<b>🧾 فاتورة مبيعات '+E(o.number)+'</b> — '+E(dmy(o.date))+'<br>العميل: <b>'+E(o.customer||'')+'</b><br>الإجمالي: <b>'+m2(o.total)+'</b> • المدفوع: '+m2(o.paid)+' • المتبقي: <b>'+m2(o.balance)+'</b>';
+  if(x.k==='x')return '<b>📄 '+E(KL[x.sec]||x.sec)+' '+E(o.no)+'</b> — '+E(dmy(o.date))+' — الحالة: <b>'+E(o.status||'—')+'</b>'+((o.partyName||o.party)?'<br>الطرف: '+E(o.partyName||o.party):'');
+  return '<b>📨 طلب: '+E(o.type||'')+'</b> — '+E(o.formNo||o.id)+'<br>بانتظار قرارك • من: '+E(o.byName||'');}).join('<hr style="border:0;border-top:1px solid #d5e0e5">');}
+function mgrAns(q,qn){var d=mdata();if(!d||!d.journals&&!d.items)return null;
+ if(/(مبيعات|المبيعات)\s*(اليوم|امس|الشهر|هذا الشهر|السنه|السنة)/.test(qn)){var t=new Date(),iso=function(x){return x.toISOString().slice(0,10);},to=iso(t),from,lb;if(/اليوم/.test(qn)){from=to;lb='اليوم';}else if(/امس/.test(qn)){from=to=iso(new Date(t-864e5));lb='أمس';}else if(/السنه|السنة/.test(qn)){from=to.slice(0,4)+'-01-01';lb='هذه السنة';}else{from=to.slice(0,7)+'-01';lb='هذا الشهر';}
+  var n=0,s=0;(d.invoices||[]).forEach(function(v){var dt=String(v.date||'').slice(0,10);if(!v||/ملغ/.test(v.status||'')||dt<from||dt>to)return;n++;s+=n2(v.totalBase!=null?v.totalBase:v.total);});return {h:'🛒 مبيعات '+lb+': <b>'+n+'</b> فاتورة بقيمة <b>'+m2(s)+' ₪</b>',say:'مبيعات '+lb+' '+n+' فاتورة بقيمة '+Math.round(s)+' شيكل'};}
+ if(/(بانتظار|طلبات|موافق)/.test(qn)&&/(قرار|موافق|بانتظار|معلق)/.test(qn)){var L=(S.reqs||[]);return {h:'⏳ الطلبات بانتظار قرارك: <b>'+L.length+'</b>'+L.slice(0,8).map(function(r){return '<br>• '+E(r.type)+' — '+E(r.byName||'');}).join(''),say:'لديك '+L.length+' طلب بانتظار قرارك'};}
+ var dd=mgrDocs(q);if(dd)return {h:dd,say:spoken(dd).slice(0,250)};
+ if(/(رصيد|كميه|كمية|مخزون)\s.*(صنف|ماده|مادة|سخان|موديل)|^(مخزون)\s/.test(qn)){var T=toks(q).filter(function(t){return !/^(صنف|ماده|مخزون|كميه)$/.test(t);});
+  var I=(d.items||[]).filter(function(i){var s=(i.code||'')+' '+(i.name||'');return T.length&&T.every(function(t){return has(s,t)||NK(i.code)===NK(t);});}).slice(0,6);
+  if(!I.length)return {h:'لم أجد صنفاً مطابقاً — اكتب رمز الصنف أو جزءاً من اسمه.'};return {h:I.map(function(i){var q0=0;(d.movements||[]).forEach(function(m){if(m&&m.itemId===i.id&&!m.xfer)q0+=((m.type==='إدخال'||m.type==='رصيد افتتاحي')?1:-1)*n2(m.qty);});return '📦 <b>'+E((i.code?i.code+' — ':'')+i.name)+'</b>: الرصيد <b>'+E(Math.round(q0*1000)/1000)+'</b>';}).join('<br>'),say:''};}
+ var mb=/^(رصيد|ذمه|ذمة|كشف)\s+(.+)$/.exec(qn);if(mb){var nm=mb[2].replace(/^(العميل|المورد|الحساب|حساب|عميل|مورد)\s+/,''),T2=toks(nm),M={};(d.journals||[]).forEach(function(j){if(!j||j.status==='ملغى')return;(j.lines||[]).forEach(function(l){if(!l||!l.account)return;var a=M[l.account]||(M[l.account]={b:0,n:0});a.b+=n2(l.debit)-n2(l.credit);a.n++;});});
+  var R=Object.keys(M).filter(function(a){return T2.length&&T2.every(function(t){return has(a,t);});}).sort(function(a,b){return M[b].n-M[a].n;}).slice(0,5);
+  if(!R.length)return {h:'لم أجد حساباً باسم «'+E(nm)+'» في القيود المرحّلة.'};return {h:R.map(function(a){return '💳 <b>'+E(a)+'</b>: <b>'+m2(Math.abs(M[a].b))+' ₪ '+(M[a].b>=0?'مدين':'دائن')+'</b>';}).join('<br>'),say:'رصيد '+R[0]+' '+Math.round(Math.abs(M[R[0]].b))+' شيكل '+(M[R[0]].b>=0?'مدين':'دائن')};}
+ if(docTok(q).length)return {h:'لم أجد مستنداً أو طلباً بالرقم <b>'+E(docTok(q).join('، '))+'</b> في بيانات التطبيق.'};
+ return null;}
+/* ---------- بيانات المندوب: عملاؤه ---------- */
+function repAns(q,qn){var C=((S.boot&&S.boot.customers)||[]);if(!C.length)return null;var T=toks(q).filter(function(t){return !/^(عميل|العميل|زبون|رقم|هاتف|تلفون|عنوان|وين|مين)$/.test(t);});if(!T.length&&!docTok(q).length)return null;
+ var R=C.filter(function(c){var s=[c.name,c.no,c.phone,c.region,c.area,c.address].join(' ');return (T.length&&T.every(function(t){return has(s,t)||NK(c.no)===NK(t)||String(c.phone||'').replace(/\D/g,'').indexOf(t.replace(/\D/g,''))>-1&&t.replace(/\D/g,'').length>=4;}));}).slice(0,6);
+ if(!R.length)return /(عميل|زبون|محل|شركه|شركة)/.test(qn)?{h:'لم أجد عميلاً مطابقاً ضمن عملائك.'}:null;
+ return {h:R.map(function(c){return '👤 <b>'+E(c.name||'')+'</b> — رقم '+E(c.no||'')+(c.phone?' • 📞 <a href="tel:'+E(c.phone)+'">'+E(c.phone)+'</a>':'')+((c.region||c.area)?' • '+E(c.region||c.area):'')+(c.address?'<br>'+E(c.address):'')+(c.bal!=null||c.balance!=null?'<br>الرصيد: <b>'+m2(c.bal!=null?c.bal:c.balance)+'</b>':'');}).join('<br>'),say:R.length===1?(R[0].name+' رقم '+(R[0].no||'')):('وجدت '+R.length+' عملاء')};}
+var G={'مدين':'الطرف الذي يزيد فيه الأصل أو المصروف، أو ينقص فيه الالتزام أو الإيراد.','دائن':'الطرف الذي يزيد فيه الالتزام أو الإيراد، أو ينقص فيه الأصل.','ذمم':'الأرصدة المستحقة على العملاء أو للموردين.','شيكات برسم التحصيل':'شيكات مقبوضة من العملاء لم تُحصَّل بعد.','سند قبض':'مستند يثبت استلام مبلغ من العميل؛ يقلل رصيده.','طلب بيع':'طلب يحجز الكميات حتى إصدار الفاتورة.','ميزان المراجعة':'قائمة أرصدة كل الحسابات في فترة؛ توازنه دليل على توازن القيود.','عموله':'نسبة المندوب من مبيعاته أو تحصيلاته حسب إعداد الأهداف.'};
+var ACT=/(^|\s)(احذف|امسح|رحل|اعتمد|وافق|ارفض|الغ|ألغ|انشئ|أنشئ|نفذ|اصرف)(\s|$)/;
+function engine(q){var qn=nz(q),a=app();
+ var mt=mathOf(q);if(mt){if(mt.err)return {h:'⚠ لم أفهم العملية: '+E(mt.err)};var r=fmtN(mt.v);return {h:'🧮 <span style="direction:ltr;display:inline-block">'+E(mt.ex)+'</span> = <b style="font-size:17px">'+E(r)+'</b>',say:'الناتج '+r};}
+ if(ACT.test(' '+qn+' ')&&!/(كيف|طريقه)/.test(qn))return {h:'لا أنفّذ أي إنشاء أو اعتماد أو حذف بنفسي — نفّذها من شاشتها في التطبيق، وتمر بصلاحياتك وبمسار الموافقات.',say:'لا أنفذ العمليات بنفسي، نفذها من شاشتها'};
+ try{var x=a==='mgr'?mgrAns(q,qn):a==='rep'?repAns(q,qn):null;if(x)return x;}catch(e){lg('data',e);}
+ var gk=null;Object.keys(G).forEach(function(k){if(qn.indexOf(nz(k))>-1&&(!gk||k.length>gk.length))gk=k;});if(gk)return {h:'<b>'+E(gk)+':</b> '+E(G[gk])};
+ return null;}
+W.__ecoMTengine=engine;
+function msg(cls,h){var w=document.getElementById('mtAst');if(!w)return null;var b=w.querySelector('.am'),d=document.createElement('div');d.className=cls;d.innerHTML=h;b.appendChild(d);var bd=w.querySelector('.mtb');bd.scrollTop=bd.scrollHeight;return d;}
+var VO=false,BUSY=0;
+function ask(q){q=String(q||'').trim();if(!q||BUSY)return;msg('mq',E(q));var r=null;try{r=engine(q);}catch(e){lg('engine',e);}
+ if(r){msg('ma',r.h+'<div class="tag">'+(r.say!==undefined?'📊 من بيانات التطبيق':'📘 من شرح البرنامج')+'</div>');say(r.say||r.h,VO);VO=false;return;}
+ if(typeof api==='function'&&!lsG('noai',false)){BUSY=1;var d=msg('ma','⏳ أسأل خدمة الذكاء الاصطناعي…');
+  var sys='أنت «مساعد إيكوواط» داخل '+(app()==='rep'?'تطبيق المندوب':'تطبيق المدير')+' لشركة إيكوواط (سخانات شمسية وأدوات صحية — فلسطين/الأردن). أجب بالعربية باختصار وخطوة بخطوة. لا تخترع بيانات أو أرقاماً أو شاشات، ولا تنفّذ أو تعد بتنفيذ أي إنشاء أو اعتماد أو حذف. إن لم تعرف فقل ذلك.';
+  Promise.resolve(api({action:'ai:call',system:sys,text:'السؤال: '+q})).then(function(x){if(x&&x.ok&&x.text){d.innerHTML=E(String(x.text)).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>')+'<div class="tag">🤖 من خدمة الذكاء الاصطناعي</div>';say(x.text,VO);}
+   else{if(x&&/forbidden|unauthorized|unknown action/.test(String(x.error||'')))lsS('noai',true);d.innerHTML=fb();}}).catch(function(){d.innerHTML=fb();}).then(function(){BUSY=0;VO=false;});return;}
+ msg('ma',fb());}
+function fb(){return 'لم أجد إجابة. جرّب: رقم مستند أو طلب'+(app()==='rep'?'، اسم عميل أو رقمه':'، «رصيد صنف …»، «رصيد الصندوق»، «مبيعات اليوم»، «الطلبات بانتظار قراري»')+'، أو «احسب 250 ضرب 3».<div class="tag">📘 من شرح البرنامج</div>';}
+function astOpen(){var o=document.getElementById('mtCalc');if(o)o.style.display='none';var w=win('mtAst','🤖 مساعد إيكوواط'),b=w.querySelector('.mtb');
+ if(!b.firstChild){b.innerHTML='<div class="am"></div>';var f=document.createElement('div');f.innerHTML='<div class="st" data-st></div><div class="ai"><input data-aq placeholder="اسأل أو اكتب رقم مستند…" autocomplete="off"><button type="button" data-mic aria-label="تحدّث">🎤</button><button type="button" data-tts aria-label="الصوت">'+(TTS?'🔊':'🔈')+'</button><button type="button" data-go aria-label="إرسال">➤</button></div>';while(f.firstChild)w.appendChild(f.firstChild);
+  msg('ma','مرحباً 👋 اسألني بالكلام أو بالكتابة.<br>'+(app()==='rep'?'مثال: «محل النور»، «رقم 1101»، «احسب 250 ضرب 3».':'مثال: رقم سند أو طلب، «رصيد صنف SH200»، «رصيد الصندوق»، «مبيعات اليوم»، «الطلبات بانتظار قراري»، «احسب 1500 ضرب 16 بالمية».')+'<div class="tag">أعرض بيانات حسابك فقط، ولا أنفّذ أي عملية.</div>');
+  var q=w.querySelector('[data-aq]'),st=function(t){w.querySelector('[data-st]').textContent=t||'';};
+  q.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();var v=q.value;q.value='';ask(v);}});
+  w.querySelector('[data-go]').onclick=function(){var v=q.value;q.value='';ask(v);};
+  w.querySelector('[data-tts]').onclick=function(){TTS=!TTS;lsS('tts',TTS);this.textContent=TTS?'🔊':'🔈';if(!TTS)try{speechSynthesis.cancel();}catch(e){}};
+  var mic=w.querySelector('[data-mic]');if(!SR){mic.disabled=true;mic.style.opacity='.5';}mic.onclick=function(){listen(mic,function(t){VO=true;ask(t);},st);};}
+ dockSt();}
+W.__ecoMT={ask:ask,open:astOpen,calc:calcOpen,engine:engine};
+function dockSt(){var d=document.getElementById('mtDock');if(!d)return;d.querySelector('[data-da]').classList.toggle('on',shown('mtAst'));d.querySelector('[data-dc]').classList.toggle('on',shown('mtCalc'));}
+function dock(){try{var d=document.getElementById('mtDock');if(!logged()){if(d)d.style.display='none';['mtAst','mtCalc'].forEach(function(id){var w=document.getElementById(id);if(w)w.style.display='none';});return;}
+ css();if(!d){d=document.createElement('div');d.id='mtDock';d.innerHTML='<button type="button" data-da aria-label="المساعد">🤖</button><button type="button" data-dc aria-label="الآلة الحاسبة">🧮</button>';document.body.appendChild(d);
+  d.querySelector('[data-da]').onclick=function(){if(shown('mtAst'))document.getElementById('mtAst').style.display='none';else astOpen();dockSt();};
+  d.querySelector('[data-dc]').onclick=function(){if(shown('mtCalc'))document.getElementById('mtCalc').style.display='none';else calcOpen();dockSt();};}
+ d.style.display='';}catch(e){lg('dock',e);}}
+setInterval(dock,1500);setTimeout(dock,600);
+})();
+</script>
+
 </body>
 </html>
