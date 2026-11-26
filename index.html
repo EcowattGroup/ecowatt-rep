@@ -13,36 +13,152 @@
 <body>
 <div id="ld"><b>إيكوواط — المندوب</b><span id="lm">جارٍ التحميل…</span><small id="ls"></small></div>
 <script>
-/* ===== ECOwatt 20261472 — مُحمِّل التطبيق الخفيف «إيكوواط — المندوب» (يُرفع مرة واحدة إلى GitHub)
-   • كود التطبيق جزء من ملف البرنامج على Drive، ويصل من الخادم (mob:app) — كل إصدار جديد يصل للجوال تلقائياً.
-   • يفتح آخر نسخة محفوظة على الجوال فوراً (يعمل بلا إنترنت)، ويفحص الإصدار عند الفتح وكل 15 دقيقة.
-   • لا يحمّل البرنامج الكامل ولا أي بيانات — البيانات يطلبها التطبيق نفسه بعد الدخول بالصلاحيات. ===== */
-var URL_="https://script.google.com/macros/s/AKfycbwwgY1U4QpfAV489MkN7rPfemC0sSkN8QTgTh4D8PO5dBkIh6J8TOPBR0s-CswSpiNrPQ/exec",APP="rep",FB="rep.html";
-function idb(n){return new Promise(function(res,rej){try{var q=indexedDB.open(n,1);q.onupgradeneeded=function(){try{q.result.createObjectStore('kv');}catch(e){}};q.onsuccess=function(){res(q.result);};q.onerror=function(){rej(q.error);};}catch(e){rej(e);}});}
-function iget(n,k){return idb(n).then(function(d){return new Promise(function(res){try{var q=d.transaction('kv','readonly').objectStore('kv').get(k);q.onsuccess=function(){res(q.result||null);};q.onerror=function(){res(null);};}catch(e){res(null);}});}).catch(function(){return null;});}
-function iput(o){return idb('eco_mob_loader').then(function(d){return new Promise(function(res,rej){var t=d.transaction('kv','readwrite');t.objectStore('kv').put(o,APP);t.oncomplete=function(){res(true);};t.onerror=function(){rej(t.error);};});});}
-function post(o){return fetch(URL_,{method:'POST',body:JSON.stringify(o)}).then(function(r){return r.json();});}
-function b64utf8(b){var bin=atob(b),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder('utf-8').decode(u);}
-function download(){return post({action:'mob:app',app:APP}).then(function(r){if(!r||!r.ok||typeof r.b64!=='string')throw new Error((r&&(r.why||r.error))||'noapp');return {pv:+r.v,av:+r.av,html:b64utf8(r.b64),at:new Date().toISOString()};});}
-function serverVer(){return post({action:'mob:ver'}).then(function(j){return j&&j.ok?(+j.v||0):0;}).catch(function(){return 0;});}
-var CHECKER=function(){/* يُحقن داخل التطبيق بعد فتحه: تحديث تلقائي */
- var W=window;if(W.__ecoMobUpd)return;W.__ecoMobUpd=1;
- function bar(t,now){var b=document.getElementById('ecoMobUpdBar');if(!t){if(b)b.remove();return;}if(!b){b=document.createElement('div');b.id='ecoMobUpdBar';b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#b42318;color:#fff;font:600 14px Tahoma,Arial;padding:10px 12px;text-align:center;direction:rtl';document.body.appendChild(b);}b.innerHTML=t+(now?' <button style="margin-inline-start:8px;border:0;border-radius:6px;padding:4px 10px;font:inherit;background:#fff;color:#b42318">تحديث الآن</button>':'');var bt=b.querySelector('button');if(bt)bt.onclick=function(){location.reload();};}
- function go(v){var end=Date.now()+60000;var t=setInterval(function(){var s=Math.max(0,Math.ceil((end-Date.now())/1000));bar('⏱ إصدار جديد '+v+' — سيُعاد فتح التطبيق تلقائياً بعد '+s+' ثانية',1);if(s<=0){clearInterval(t);location.reload();}},1000);}
- function chk(){if(W.__ecoMobBusy)return;W.__ecoMobBusy=1;W.__ecoMobServerVer().then(function(sv){if(!(sv>W.__ecoMobPV)){W.__ecoMobBusy=0;return;}return W.__ecoMobDownload().then(function(x){return W.__ecoMobPut(x).then(function(){W.__ecoMobPV=x.pv;go(x.pv);});});}).catch(function(){W.__ecoMobBusy=0;});}
- setTimeout(chk,8000);setInterval(chk,15*60*1000);};
-function run(x){window.__ecoMobPV=+x.pv||0;window.ECO_REP_VER=+x.av||0;window.__ecoMobServerVer=serverVer;window.__ecoMobDownload=download;window.__ecoMobPut=iput;
- var inj='<script>window.__ecoMobPV='+(+x.pv||0)+';window.ECO_REP_VER='+(+x.av||0)+';('+CHECKER.toString()+')();<\/script>';var h=x.html,i=h.toLowerCase().lastIndexOf('</body>');h=i>-1?h.slice(0,i)+inj+h.slice(i):h+inj;
- document.open();document.write(h);document.close();}
-function msg(t,s,retry){var a=document.getElementById('lm'),b=document.getElementById('ls');if(a)a.textContent=t;if(b)b.textContent=s||'';if(retry&&!document.getElementById('rt')){var bt=document.createElement('button');bt.id='rt';bt.textContent='إعادة المحاولة';bt.onclick=function(){location.reload();};document.getElementById('ld').appendChild(bt);}}
-function fallback(e){fetch(FB,{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.text();}).then(function(h){run({pv:0,av:0,html:h});}).catch(function(){msg('تعذّر تحميل التطبيق',(e&&e.message?e.message+' — ':'')+'تحقّق من الإنترنت ثم أعد المحاولة',1);});}
-iget('eco_mob_loader',APP).then(function(c){
- if(c&&c.html){run(c);return;}
- return (APP==='rep'?iget('eco_rep_loader','app'):Promise.resolve(null)).then(function(o){
-  if(o&&o.rep){run({pv:0,av:o.v,html:o.rep});return;}
-  msg('جارٍ تنزيل التطبيق لأول مرة…','يحتاج إنترنت مرة واحدة فقط');
-  return download().then(function(x){return iput(x).catch(function(){}).then(function(){run(x);});}).catch(fallback);});
-});
+/* ===== ECOwatt 20261474 — مُحمِّل التطبيق الخفيف «إيكوواط — المندوب» (يُرفع إلى GitHub)
+   • كود التطبيق جزء من ملف البرنامج على Drive، ويصل من الخادم (mob:app).
+   • 20261474: دوال المُحمِّل مغلقة فلا يستبدلها التطبيق؛ تحقّق من سلامة الملف قبل التفعيل؛ تأكيد الإصدار بعد إعادة الفتح؛
+     لا عدّاد متكرر؛ إعادة محاولة متدرجة؛ لا يُعاد الفتح أثناء الكتابة أو الإرسال. ===== */
+(function engine() {
+  'use strict';
+  var URL_ = "https://script.google.com/macros/s/AKfycbwwgY1U4QpfAV489MkN7rPfemC0sSkN8QTgTh4D8PO5dBkIh6J8TOPBR0s-CswSpiNrPQ/exec", APP = "rep", FB = "rep.html", LEGACY = "", DB = 'eco_mob_loader', LS = 'eco_mob_upd_' + APP, LDR = 20261474;
+  /* ملاحظة: لا تُحفظ دوال المتصفح (fetch / indexedDB / crypto / document) قبل كتابة التطبيق فوق الصفحة —
+     في Chrome تتوقف النسخ المحفوظة عن العمل بعد document.open (رسالة Failed to fetch). تُقرأ عند كل استدعاء. */
+  var W = window, JP = JSON.parse, JS = JSON.stringify, NF = null;
+  function FETCH(u, o) { return (NF || W.fetch).call(W, u, o); }
+  function openDb(name, mk) { return new Promise(function (res, rej) { try { var q = W.indexedDB.open(name, 1); q.onupgradeneeded = function () { try { if (!q.result.objectStoreNames.contains('kv')) q.result.createObjectStore('kv'); } catch (e) {} }; q.onsuccess = function () { res(q.result); }; q.onerror = function () { rej(q.error); }; } catch (e) { rej(e); } }); }
+  function kget(name, k) { return openDb(name).then(function (d) { return new Promise(function (res) { try { var q = d.transaction('kv', 'readonly').objectStore('kv').get(k); q.onsuccess = function () { res(q.result || null); d.close(); }; q.onerror = function () { res(null); d.close(); }; } catch (e) { res(null); try { d.close(); } catch (x) {} } }); }).catch(function () { return null; }); }
+  function kput(name, k, o) { return openDb(name).then(function (d) { return new Promise(function (res, rej) { var t = d.transaction('kv', 'readwrite'); t.objectStore('kv').put(o, k); t.oncomplete = function () { d.close(); res(true); }; t.onerror = t.onabort = function () { d.close(); rej(t.error || new Error('idb')); }; }); }); }
+  function kdel(name, k) { return openDb(name).then(function (d) { return new Promise(function (res) { var t = d.transaction('kv', 'readwrite'); t.objectStore('kv').delete(k); t.oncomplete = t.onerror = t.onabort = function () { d.close(); res(true); }; }); }).catch(function () { return false; }); }
+  function st() { try { return JP(localStorage.getItem(LS) || '{}') || {}; } catch (e) { return {}; } }
+  function sst(o) { try { localStorage.setItem(LS, JS(o)); } catch (e) {} }
+  function post(o, ms) {
+    var ctl = W.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, ms || 45000);
+    return FETCH(URL_, { method: 'POST', body: JS(o), cache: 'no-store', signal: ctl ? ctl.signal : undefined }).then(function (r) { clearTimeout(tm); if (!r.ok) throw new Error('http ' + r.status); return r.json(); }, function (e) { clearTimeout(tm); throw e; });
+  }
+  function hex(buf) { var a = new Uint8Array(buf), s = ''; for (var i = 0; i < a.length; i++) s += (a[i] < 16 ? '0' : '') + a[i].toString(16); return s; }
+  function decode(b) { var bin = atob(b), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new TextDecoder('utf-8', { fatal: true }).decode(u); }
+  /* سلامة الملف قبل التفعيل: الطول + بصمة SHA-256 (إن أرسلها الخادم) + فكّ الترميز + بنية HTML كاملة */
+  function verify(r) {
+    if (!r || !r.ok || typeof r.b64 !== 'string') return Promise.reject(new Error((r && (r.why || r.error)) || 'noapp'));
+    var b = r.b64.replace(/\s+/g, '');
+    if (r.len && b.length !== +r.len) return Promise.reject(new Error('الملف وصل ناقصاً'));
+    var SUB = W.crypto && W.crypto.subtle, p = (r.sha && SUB && W.TextEncoder) ? SUB.digest('SHA-256', new TextEncoder().encode(b)).then(function (h) { if (hex(h) !== String(r.sha).toLowerCase()) throw new Error('بصمة الملف غير مطابقة'); }) : Promise.resolve();
+    return p.then(function () {
+      var h; try { h = decode(b); } catch (e) { throw new Error('ترميز الملف تالف'); }
+      if (h.length < 5000 || !/<\/html>\s*$/i.test(h) || !/<body/i.test(h)) throw new Error('الملف غير مكتمل');
+      return { pv: +r.v || 0, av: +r.av || 0, html: h, len: h.length, at: new Date().toISOString() };
+    });
+  }
+  function download() { return post({ action: 'mob:app', app: APP }, 90000).then(verify); }
+  function serverVer() { return post({ action: 'mob:ver' }, 30000).then(function (j) { return j && j.ok ? (+j.v || 0) : 0; }); }
+  /* يحفظ ثم يقرأ ما حُفظ ويقارنه — لا يُعلن التحديث جاهزاً قبل التأكد أنه في الذاكرة فعلاً */
+  function store(x) { return kput(DB, APP, x).then(function () { return kget(DB, APP); }).then(function (c) { if (!c || c.pv !== x.pv || !c.html || c.html.length !== x.html.length) throw new Error('تعذّر الحفظ على الجوال (الذاكرة ممتلئة؟)'); return c; }); }
+  /* إنقاذ: نسخة 20261472/73 حفظت التحديث خطأً في قاعدة التطبيق (ecoMgr/ecoFm) — نقلها إلى مكانها الصحيح ثم حذف النسخة الضالّة فقط */
+  function rescue(cur) {
+    if (!LEGACY) return Promise.resolve(cur);
+    return kget(LEGACY, APP).then(function (o) {
+      if (!o || typeof o.html !== 'string' || !(+o.pv > (cur ? +cur.pv || 0 : 0)) || !/<\/html>\s*$/i.test(o.html)) return cur;
+      var x = { pv: +o.pv, av: +o.av || +o.pv, html: o.html, len: o.html.length, at: o.at || new Date().toISOString(), rescued: 1 };
+      return store(x).then(function (c) { return kdel(LEGACY, APP).then(function () { return c; }); }).catch(function () { return cur; });
+    });
+  }
+
+  /* ===== داخل التطبيق بعد فتحه ===== */
+  var cur = null, busy = false, ready = null, nextAt = 0, fails = 0, cdT = 0, pend = 0, touched = new Set();
+  function touch(ev) { var e = ev.target; if (e && (e.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(e.tagName))) touched.add(e); }
+  function bar(t, kind, btn) {
+    var b = W.document.getElementById('ecoMobUpdBar');
+    if (!t) { if (b) b.remove(); return; }
+    if (!b) { b = W.document.createElement('div'); b.id = 'ecoMobUpdBar'; }
+    if (!b.isConnected) (W.document.documentElement || W.document.body).appendChild(b);
+    var bg = kind === 'ok' ? '#11834a' : kind === 'info' ? '#0a246a' : kind === 'warn' ? '#a15c00' : '#b42318';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:' + bg + ';color:#fff;font:600 14px Tahoma,Arial;padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top));text-align:center;direction:rtl;box-shadow:0 2px 8px rgba(0,0,0,.25)';
+    b.textContent = t;
+    if (btn) { var x = W.document.createElement('button'); x.textContent = btn[0]; x.style.cssText = 'margin-inline-start:8px;border:0;border-radius:6px;padding:4px 10px;font:inherit;background:#fff;color:' + bg; x.onclick = btn[1]; b.appendChild(x); }
+    if (kind === 'warn') { var c = W.document.createElement('button'); c.textContent = '✕'; c.setAttribute('aria-label', 'إغلاق'); c.style.cssText = 'margin-inline-start:6px;border:0;background:none;color:#fff;font:inherit'; c.onclick = function () { bar(''); }; b.appendChild(c); }
+  }
+  /* هل المستخدم في منتصف عمل؟ حقل مكتوب لم يُحفظ، أو حقل مفتوح للكتابة، أو طلب ما زال يُرسل للخادم */
+  function dirty() {
+    if (pend > 0) return true;
+    var a = W.document.activeElement; if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return true;
+    /* فقط الحقول التي كتب فيها المستخدم بنفسه وما زالت ظاهرة (بعد الحفظ يعيد التطبيق رسم الشاشة فتختفي) */
+    var hit = false; touched.forEach(function (e) { if (!W.document.contains(e)) { touched.delete(e); return; } if (e.type === 'search' || e.type === 'password') return; if (e.type === 'checkbox' || e.type === 'radio' || e.tagName === 'SELECT' || String(e.value || e.textContent || '').trim() !== '') hit = true; });
+    return hit;
+  }
+  function activate(force) {
+    if (!ready) return;
+    if (!force && dirty()) { bar('⏳ الإصدار ' + ready + ' جاهز — سيُفعَّل تلقائياً بعد إكمال ما تكتبه أو ترسله', 'warn', ['تحديث الآن', function () { if (!dirty() || confirm('لديك بيانات لم تُحفظ بعد في هذه الشاشة. احفظها أولاً، أو اضغط «موافق» للتحديث الآن وقد تضيع.')) activate(true); }]); setTimeout(function () { activate(false); }, 15000); return; }
+    var s = st(); s.want = ready; s.tries = (s.want === ready ? (s.tries || 0) : 0) + 1; s.at = Date.now(); sst(s);
+    bar('🔄 جارٍ تفعيل الإصدار ' + ready + '…', 'info'); setTimeout(function () { location.reload(); }, 300);
+  }
+  function countdown(v) {
+    ready = v; clearInterval(cdT); var end = Date.now() + 60000;
+    function tick() { var s = Math.max(0, Math.ceil((end - Date.now()) / 1000)); if (s <= 0) { clearInterval(cdT); activate(false); return; }
+      bar('✔ تم تنزيل الإصدار ' + v + ' والتحقق منه — سيُعاد فتح التطبيق بعد ' + s + ' ثانية', 'bad', ['تحديث الآن', function () { clearInterval(cdT); activate(false); }]); }
+    tick(); cdT = setInterval(tick, 1000);
+  }
+  function ar(e) { var m = String(e && e.message || e || ''); if (/abort/i.test(m)) return 'انتهت مهلة الاتصال'; if (/fetch|network|load failed/i.test(m)) return 'لا يوجد اتصال بالخادم'; if (/^busy$/.test(m)) return 'الخادم مشغول'; if (/^http /.test(m)) return 'خطأ من الخادم ' + m.slice(5); if (/^(noapp|no_app|no_app_file)$/.test(m)) return 'الخادم لم يجهّز التطبيق'; if (/^disabled$/.test(m)) return 'التحديث موقوف من الإدارة'; if (/[a-z]/i.test(m) && !/[\u0600-\u06FF]/.test(m)) return 'خطأ غير متوقع'; return m.slice(0, 80) || 'خطأ غير متوقع'; }
+  function later(why) { fails++; var m = [1, 2, 5, 15, 30][Math.min(fails - 1, 4)]; nextAt = Date.now() + m * 60000; bar('⚠ تعذّر تنزيل التحديث (' + why + ') — ستُعاد المحاولة تلقائياً بعد ' + (m === 1 ? 'دقيقة' : m === 2 ? 'دقيقتين' : m < 11 ? m + ' دقائق' : m + ' دقيقة'), 'warn', ['أعد المحاولة الآن', function () { nextAt = 0; chk(true); }]); }
+  function chk(manual) {
+    if (busy || ready || (!manual && Date.now() < nextAt)) return; busy = true;
+    var s = st();
+    if (!manual && s.stuck && s.stuck >= (cur.pv + 1) && Date.now() - (s.stuckAt || 0) < 6 * 3600000) { busy = false; return; }
+    serverVer().then(function (sv) {
+      if (!(sv > cur.pv)) { fails = 0; if (manual) { bar('✓ لديك أحدث إصدار (' + cur.pv + ')', 'ok'); setTimeout(function () { bar(''); }, 4000); } return; }
+      /* نسخة أحدث محفوظة مسبقاً (من نافذة أخرى أو محاولة سابقة)؟ فعّلها بلا تنزيل */
+      return kget(DB, APP).then(function (c) {
+        if (c && +c.pv >= sv && c.html) return c.pv;
+        bar('⬇ جارٍ تنزيل الإصدار ' + sv + '…', 'info');
+        return download().then(function (x) {
+          if (!(x.pv > cur.pv)) throw new Error('الخادم أرسل نسخة غير أحدث (' + x.pv + ')');
+          if (x.pv < sv) throw new Error('الخادم لم يجهّز الإصدار ' + sv + ' بعد');
+          return store(x).then(function () { return x.pv; });
+        });
+      }).then(function (v) { fails = 0; countdown(v); });
+    }).catch(function (e) { later(ar(e)); }).then(function () { busy = false; });
+  }
+  function inApp(x) {
+    cur = x;
+    try { var F = W.fetch; NF = F; if (F && !F.__eco) { var G = function () { pend++; return F.apply(this, arguments).then(function (r) { pend--; return r; }, function (e) { pend--; throw e; }); }; G.__eco = 1; W.fetch = G; } } catch (e) {}
+    W.document.addEventListener('input', touch, true); W.document.addEventListener('change', touch, true);
+    var s = st();
+    if (s.want) {
+      if (cur.pv >= s.want) { bar('✓ تم التحديث بنجاح — الإصدار المثبّت الآن ' + cur.pv, 'ok'); setTimeout(function () { bar(''); }, 5000); sst({ okAt: Date.now(), okV: cur.pv }); }
+      else if ((s.tries || 0) >= 2) { sst({ stuck: s.want, stuckAt: Date.now() }); bar('⚠ لم يكتمل تفعيل الإصدار ' + s.want + ' (ما زال ' + cur.pv + ' يعمل). بياناتك محفوظة.', 'bad', ['أعد المحاولة', function () { sst({}); location.reload(); }]); }
+      else { setTimeout(function () { ready = s.want; activate(false); }, 1500); }
+    }
+    setTimeout(function () { chk(false); }, 8000);
+    setInterval(function () { chk(false); }, 15 * 60 * 1000);
+    var last = Date.now();
+    W.document.addEventListener('visibilitychange', function () {
+      if (W.document.hidden) { if (ready && !dirty()) { var t = st(); t.want = ready; t.tries = (t.tries || 0) + 1; t.at = Date.now(); sst(t); location.reload(); } return; }
+      if (Date.now() - last > 120000) { last = Date.now(); chk(false); }
+    });
+  }
+  /* واجهة ثابتة لا يستطيع التطبيق استبدالها */
+  try { Object.defineProperty(W, '__ecoLdr', { value: Object.freeze({ inApp: inApp, check: function () { chk(true); }, loader: LDR }), writable: false, configurable: false }); } catch (e) {}
+
+  /* ===== قبل فتح التطبيق ===== */
+  function run(x) {
+    W.__ecoMobPV = +x.pv || 0; W.ECO_REP_VER = +x.av || 0;
+    var inj = '<script>window.__ecoMobPV=' + (+x.pv || 0) + ';window.ECO_REP_VER=' + (+x.av || 0) + ';try{window.__ecoLdr.inApp({pv:' + (+x.pv || 0) + '});}catch(e){}<\/script>';
+    var h = x.html, i = h.toLowerCase().lastIndexOf('</body>'); h = i > -1 ? h.slice(0, i) + inj + h.slice(i) : h + inj;
+    W.document.open(); W.document.write(h); W.document.close();
+  }
+  function msg(t, s, retry) { var a = W.document.getElementById('lm'), b = W.document.getElementById('ls'); if (a) a.textContent = t; if (b) b.textContent = s || ''; if (retry && !W.document.getElementById('rt')) { var bt = W.document.createElement('button'); bt.id = 'rt'; bt.textContent = 'إعادة المحاولة'; bt.onclick = function () { location.reload(); }; W.document.getElementById('ld').appendChild(bt); } }
+  function fallback(e) { FETCH(FB, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (h) { run({ pv: 0, av: 0, html: h }); }).catch(function () { msg('تعذّر تحميل التطبيق', (e ? ar(e) + ' — ' : '') + 'تحقّق من الإنترنت ثم أعد المحاولة', 1); }); }
+  function first(tries) {
+    msg('جارٍ تنزيل التطبيق لأول مرة…', tries > 1 ? 'محاولة ' + tries + ' من 3' : 'يحتاج إنترنت مرة واحدة فقط');
+    return download().then(function (x) { return store(x).catch(function () { return x; }).then(function () { run(x); }); })
+      .catch(function (e) { if (tries < 3) return new Promise(function (r) { setTimeout(r, 2000 * tries); }).then(function () { return first(tries + 1); }); fallback(e); });
+  }
+  kget(DB, APP).then(rescue).then(function (c) {
+    if (c && c.html) { run(c); return; }
+    return (APP === 'rep' ? kget('eco_rep_loader', 'app') : Promise.resolve(null)).then(function (o) {
+      if (o && o.rep) { run({ pv: 0, av: o.v, html: o.rep }); return; }
+      return first(1);
+    });
+  });
+})();
 </script>
 </body>
 </html>
