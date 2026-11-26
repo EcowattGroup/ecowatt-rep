@@ -4,51 +4,44 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a246a">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg">
 <title>إيكوواط — المندوب</title>
-<style>body{margin:0;background:#f1f1ef;font:15px Tahoma,Arial,sans-serif;color:#1f2937;direction:rtl}#ld{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;text-align:center;padding:20px}#ld b{color:#0a246a;font-size:18px}#ld small{color:#6b7280}</style>
+<style>body{margin:0;background:#f1f1ef;font:15px Tahoma,Arial,sans-serif;color:#1f2937;direction:rtl}#ld{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:8px;text-align:center;padding:20px;box-sizing:border-box}#ld b{color:#0a246a;font-size:18px}#ld small{color:#6b7280}#ld button{margin-top:8px;padding:8px 18px;border:0;border-radius:8px;background:#0a246a;color:#fff;font:inherit}</style>
 </head>
 <body>
 <div id="ld"><b>إيكوواط — المندوب</b><span id="lm">جارٍ التحميل…</span><small id="ls"></small></div>
 <script>
-/* ===== ECOwatt 20261360 — مُحمِّل تطبيق المندوب (يُرفع مرة واحدة إلى GitHub مكان index.html)
-   تطبيق المندوب أصبح جزءاً من ملف البرنامج الواحد على Drive (نفس رقم الإصدار).
-   • عند الفتح: يعرض آخر نسخة محفوظة على الموبايل فوراً (يعمل بدون إنترنت).
-   • يفحص الخادم عند الفتح وكل 15 دقيقة. إصدار أحدث ← ينزّله في الخلفية ← شريط أحمر بعدّاد دقيقة ← يُعاد الفتح على الإصدار الجديد.
-   • نفس عنوان الصفحة ونفس مكان التخزين، فبيانات المندوب المحفوظة على الموبايل (الدخول، الزيارات غير المرسلة) تبقى كما هي.
-   • إن لم يوجد شيء محفوظ ولا إنترنت: يفتح rep.html (النسخة المرفقة مع المُحمِّل). ===== */
-var URL_='https://script.google.com/macros/s/AKfycbwwgY1U4QpfAV489MkN7rPfemC0sSkN8QTgTh4D8PO5dBkIh6J8TOPBR0s-CswSpiNrPQ/exec';
-var LOADER=20261360;
-function idb(){return new Promise(function(res,rej){try{var q=indexedDB.open('eco_rep_loader',1);q.onupgradeneeded=function(){try{q.result.createObjectStore('kv');}catch(e){}};q.onsuccess=function(){res(q.result);};q.onerror=function(){rej(q.error);};}catch(e){rej(e);}});}
-function iget(){return idb().then(function(d){return new Promise(function(res){try{var q=d.transaction('kv','readonly').objectStore('kv').get('app');q.onsuccess=function(){res(q.result||null);};q.onerror=function(){res(null);};}catch(e){res(null);}});}).catch(function(){return null;});}
-function iput(o){return idb().then(function(d){return new Promise(function(res,rej){var t=d.transaction('kv','readwrite');t.objectStore('kv').put(o,'app');t.oncomplete=function(){res(true);};t.onerror=function(){rej(t.error);};});});}
+/* ===== ECOwatt 20261472 — مُحمِّل التطبيق الخفيف «إيكوواط — المندوب» (يُرفع مرة واحدة إلى GitHub)
+   • كود التطبيق جزء من ملف البرنامج على Drive، ويصل من الخادم (mob:app) — كل إصدار جديد يصل للجوال تلقائياً.
+   • يفتح آخر نسخة محفوظة على الجوال فوراً (يعمل بلا إنترنت)، ويفحص الإصدار عند الفتح وكل 15 دقيقة.
+   • لا يحمّل البرنامج الكامل ولا أي بيانات — البيانات يطلبها التطبيق نفسه بعد الدخول بالصلاحيات. ===== */
+var URL_="https://script.google.com/macros/s/AKfycbwwgY1U4QpfAV489MkN7rPfemC0sSkN8QTgTh4D8PO5dBkIh6J8TOPBR0s-CswSpiNrPQ/exec",APP="rep",FB="rep.html";
+function idb(n){return new Promise(function(res,rej){try{var q=indexedDB.open(n,1);q.onupgradeneeded=function(){try{q.result.createObjectStore('kv');}catch(e){}};q.onsuccess=function(){res(q.result);};q.onerror=function(){rej(q.error);};}catch(e){rej(e);}});}
+function iget(n,k){return idb(n).then(function(d){return new Promise(function(res){try{var q=d.transaction('kv','readonly').objectStore('kv').get(k);q.onsuccess=function(){res(q.result||null);};q.onerror=function(){res(null);};}catch(e){res(null);}});}).catch(function(){return null;});}
+function iput(o){return idb('eco_mob_loader').then(function(d){return new Promise(function(res,rej){var t=d.transaction('kv','readwrite');t.objectStore('kv').put(o,APP);t.oncomplete=function(){res(true);};t.onerror=function(){rej(t.error);};});});}
 function post(o){return fetch(URL_,{method:'POST',body:JSON.stringify(o)}).then(function(r){return r.json();});}
 function b64utf8(b){var bin=atob(b),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder('utf-8').decode(u);}
-function extract(html){var m=/<script type="application\/x-eco-rep" id="eco-rep-app" data-v="(\d+)">([A-Za-z0-9+\/=\s]+)<\/script>/.exec(html);if(!m)return null;return {v:+m[1],rep:b64utf8(m[2].replace(/\s+/g,''))};}
-/* تنزيل ملف البرنامج من الخادم بأجزائه (نفس طريقة البرنامج على الكمبيوتر) واستخراج تطبيق المندوب منه */
-function download(onp){return post({action:'getAppPart',i:0,rep:1}).then(function(r0){if(!r0||!r0.ok||typeof r0.part!=='string')throw new Error('noupd');
-  var total=+r0.total||1,ver=r0.ver,parts=new Array(total);parts[0]=r0.part;var done=1,next=1;
-  return new Promise(function(res,rej){var active=0,failed=false;
-   function get(i,tries){active++;post({action:'getAppPart',i:i,rep:1}).then(function(r){active--;if(r&&r.ok&&typeof r.part==='string'&&r.ver===ver){parts[i]=r.part;done++;if(onp)onp(done,total);pump();}else if(tries>1){get(i,tries-1);}else{failed=true;rej(new Error('part'));}},function(){active--;if(tries>1)setTimeout(function(){get(i,tries-1);},1500);else{failed=true;rej(new Error('net'));}});}
-   function pump(){if(failed)return;while(active<3&&next<total)get(next++,4);if(done===total){var x=extract(parts.join(''));if(!x)rej(new Error('norep'));else res(x);}}
-   pump();});});}
-function serverVer(){return fetch(URL_+'?check=app',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){return +(j&&(j.version||j.ver))||0;}).catch(function(){return 0;});}
-var CHECKER=function(){/* يُحقن داخل تطبيق المندوب بعد فتحه */
- var W=window;if(W.__ecoRepUpd)return;W.__ecoRepUpd=1;
- function bar(t){var b=document.getElementById('ecoRepUpdBar');if(!t){if(b)b.remove();return;}if(!b){b=document.createElement('div');b.id='ecoRepUpdBar';b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483600;background:#b42318;color:#fff;text-align:center;font:700 14px Tahoma,Arial;padding:9px 10px;direction:rtl';document.body.appendChild(b);}b.innerHTML=t;}
- function go(v){var end=Date.now()+60000;var t=setInterval(function(){var s=Math.max(0,Math.ceil((end-Date.now())/1000));bar('⏱ سيتم تحديث التطبيق تلقائياً إلى الإصدار '+v+' خلال 0:'+String(s).padStart(2,'0')+' — ما سجّلته محفوظ على الموبايل');if(s<=0){clearInterval(t);location.reload();}},500);}
- function chk(){if(W.__ecoRepBusy)return;W.__ecoRepBusy=1;W.__ecoRepServerVer().then(function(sv){if(!(sv>W.ECO_REP_VER)){W.__ecoRepBusy=0;return;}return W.__ecoRepDownload().then(function(x){if(x&&x.v>W.ECO_REP_VER)return W.__ecoRepPut({v:x.v,rep:x.rep,at:new Date().toISOString()}).then(function(){go(x.v);});W.__ecoRepBusy=0;});}).catch(function(){W.__ecoRepBusy=0;});}
+function download(){return post({action:'mob:app',app:APP}).then(function(r){if(!r||!r.ok||typeof r.b64!=='string')throw new Error((r&&(r.why||r.error))||'noapp');return {pv:+r.v,av:+r.av,html:b64utf8(r.b64),at:new Date().toISOString()};});}
+function serverVer(){return post({action:'mob:ver'}).then(function(j){return j&&j.ok?(+j.v||0):0;}).catch(function(){return 0;});}
+var CHECKER=function(){/* يُحقن داخل التطبيق بعد فتحه: تحديث تلقائي */
+ var W=window;if(W.__ecoMobUpd)return;W.__ecoMobUpd=1;
+ function bar(t,now){var b=document.getElementById('ecoMobUpdBar');if(!t){if(b)b.remove();return;}if(!b){b=document.createElement('div');b.id='ecoMobUpdBar';b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#b42318;color:#fff;font:600 14px Tahoma,Arial;padding:10px 12px;text-align:center;direction:rtl';document.body.appendChild(b);}b.innerHTML=t+(now?' <button style="margin-inline-start:8px;border:0;border-radius:6px;padding:4px 10px;font:inherit;background:#fff;color:#b42318">تحديث الآن</button>':'');var bt=b.querySelector('button');if(bt)bt.onclick=function(){location.reload();};}
+ function go(v){var end=Date.now()+60000;var t=setInterval(function(){var s=Math.max(0,Math.ceil((end-Date.now())/1000));bar('⏱ إصدار جديد '+v+' — سيُعاد فتح التطبيق تلقائياً بعد '+s+' ثانية',1);if(s<=0){clearInterval(t);location.reload();}},1000);}
+ function chk(){if(W.__ecoMobBusy)return;W.__ecoMobBusy=1;W.__ecoMobServerVer().then(function(sv){if(!(sv>W.__ecoMobPV)){W.__ecoMobBusy=0;return;}return W.__ecoMobDownload().then(function(x){return W.__ecoMobPut(x).then(function(){W.__ecoMobPV=x.pv;go(x.pv);});});}).catch(function(){W.__ecoMobBusy=0;});}
  setTimeout(chk,8000);setInterval(chk,15*60*1000);};
-function run(x){window.ECO_REP_VER=x.v;window.__ecoRepServerVer=serverVer;window.__ecoRepDownload=download;window.__ecoRepPut=iput;
- var inj='<script>window.ECO_REP_VER='+x.v+';('+CHECKER.toString()+')();<\/script>';var h=x.rep,i=h.toLowerCase().lastIndexOf('</body>');h=i>-1?h.slice(0,i)+inj+h.slice(i):h+inj;
+function run(x){window.__ecoMobPV=+x.pv||0;window.ECO_REP_VER=+x.av||0;window.__ecoMobServerVer=serverVer;window.__ecoMobDownload=download;window.__ecoMobPut=iput;
+ var inj='<script>window.__ecoMobPV='+(+x.pv||0)+';window.ECO_REP_VER='+(+x.av||0)+';('+CHECKER.toString()+')();<\/script>';var h=x.html,i=h.toLowerCase().lastIndexOf('</body>');h=i>-1?h.slice(0,i)+inj+h.slice(i):h+inj;
  document.open();document.write(h);document.close();}
-function msg(t,s){var a=document.getElementById('lm'),b=document.getElementById('ls');if(a)a.textContent=t;if(b)b.textContent=s||'';}
-iget().then(function(c){
- if(c&&c.rep){run(c);return;}
- msg('جارٍ تنزيل التطبيق لأول مرة…','');
- download(function(d,t){msg('جارٍ تنزيل التطبيق لأول مرة…',d+' / '+t);}).then(function(x){return iput({v:x.v,rep:x.rep,at:new Date().toISOString()}).then(function(){run(x);});})
- .catch(function(){fetch('rep.html',{cache:'no-store'}).then(function(r){return r.text();}).then(function(h){run({v:LOADER,rep:h});}).catch(function(){msg('تعذّر التحميل — تحقّق من الإنترنت ثم أعد فتح التطبيق','');});});
+function msg(t,s,retry){var a=document.getElementById('lm'),b=document.getElementById('ls');if(a)a.textContent=t;if(b)b.textContent=s||'';if(retry&&!document.getElementById('rt')){var bt=document.createElement('button');bt.id='rt';bt.textContent='إعادة المحاولة';bt.onclick=function(){location.reload();};document.getElementById('ld').appendChild(bt);}}
+function fallback(e){fetch(FB,{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.text();}).then(function(h){run({pv:0,av:0,html:h});}).catch(function(){msg('تعذّر تحميل التطبيق',(e&&e.message?e.message+' — ':'')+'تحقّق من الإنترنت ثم أعد المحاولة',1);});}
+iget('eco_mob_loader',APP).then(function(c){
+ if(c&&c.html){run(c);return;}
+ return (APP==='rep'?iget('eco_rep_loader','app'):Promise.resolve(null)).then(function(o){
+  if(o&&o.rep){run({pv:0,av:o.v,html:o.rep});return;}
+  msg('جارٍ تنزيل التطبيق لأول مرة…','يحتاج إنترنت مرة واحدة فقط');
+  return download().then(function(x){return iput(x).catch(function(){}).then(function(){run(x);});}).catch(fallback);});
 });
 </script>
 </body>
